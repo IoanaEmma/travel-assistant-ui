@@ -1,24 +1,29 @@
 import { Slot, useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import SideNav from '../components/SideNav';
+import { Provider } from 'react-redux';
+import { store } from '../store';
 
 export default function Layout() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.navBar}>
-        <Pressable onPress={() => router.push('/')}>
-          <Text style={styles.navTitle}>Smart Travel Assistant</Text>
-        </Pressable>
-      </View>
-      <View style={styles.body}>
-        <SideNav />
-        <View style={styles.content}>
-          <Slot />
+    <Provider store={store}>
+      <View style={styles.container}>
+        <View style={styles.navBar}>
+          <Pressable onPress={() => router.push('/')}>
+            <Text style={styles.navTitle}>Smart Travel Assistant</Text>
+          </Pressable>
+        </View>
+        <View style={styles.body}>
+          <SideNav />
+          <View style={styles.content}>
+            <Slot />
+          </View>
         </View>
       </View>
-    </View>
+    </Provider>
+
   );
 }
 
