@@ -1,17 +1,45 @@
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList } from 'react-native';
+import { useSelector } from 'react-redux';
+import { useChatWithAssistantMutation } from '../features/travel/travelApi';
+import { RootState } from "../store";
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function Home() {
+  const [chatWithAssistant, { isLoading }] = useChatWithAssistantMutation();
+  const flights = useSelector((state: RootState) => state.travel.foundFlights);
+  const [userMessage, setUserMessage] = useState('');
+  const router = useRouter();
+
+  const handleChat = async () => {
+    try {
+      const response = await chatWithAssistant(userMessage).unwrap();
+      console.log("Chat Response:", response.tab);
+
+      router.push(`/${response.tab}`);
+    } catch (error) {
+      // handle error
+    }
+  };
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Smart Travel Assistant</Text>
       <Text style={styles.subtitle}>Your AI-powered travel companion</Text>
       <View style={styles.inputContainer}>
         <TextInput
+          value={userMessage}
+          onChangeText={setUserMessage}
+          onSubmitEditing={handleChat}
+          returnKeyType="send"
           style={styles.input}
           placeholder="Hi there, let me help you plan your next trip..."
           placeholderTextColor="#888"
         />
       </View>
+
+
       {/* <View style={styles.boxGrid}>
         <View style={styles.row}>
           <View style={styles.box}>
