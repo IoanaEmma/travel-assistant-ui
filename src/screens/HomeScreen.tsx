@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useChatWithAssistantMutation } from '../features/travel/travelApi';
 import { RootState } from "../store";
@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 
 export default function Home() {
   const [chatWithAssistant, { isLoading }] = useChatWithAssistantMutation();
-  const flights = useSelector((state: RootState) => state.travel.foundFlights);
   const [userMessage, setUserMessage] = useState('');
   const router = useRouter();
 
@@ -39,7 +38,9 @@ export default function Home() {
         />
       </View>
 
-
+      {isLoading && (
+        <ActivityIndicator size="large" color="#1976d2" style={{ marginTop: 16 }} />
+      )}
       {/* <View style={styles.boxGrid}>
         <View style={styles.row}>
           <View style={styles.box}>
