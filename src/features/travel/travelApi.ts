@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { Flight, TravelApiResponse } from '../../types/travel';
 import config from '../../config';
-import { setFlights, setTab } from './travelSlice';
+import { setFlights, setTab, setHotels } from './travelSlice';
 
 export const travelApi = createApi({
     reducerPath: 'travelApi',
@@ -16,11 +16,18 @@ export const travelApi = createApi({
             async onQueryStarted(_userMessage, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
-                    console.log("Travel API Response:", data);
-                    const flights = data.response.flights as Flight[];
                     const tab = data.response.tab;
                     dispatch(setTab(tab));
-                    dispatch(setFlights(flights));
+
+                    if (Object.prototype.hasOwnProperty.call(data.response, 'flights')) {
+                        const flights = data.response.flights as Flight[];
+                        dispatch(setFlights(flights));
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(data.response, 'hotels')) {
+                        const hotels = data.response.hotels;
+                        dispatch(setHotels(hotels));
+                    }
                 } catch { }
             }
         }),

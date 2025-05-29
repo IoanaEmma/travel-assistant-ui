@@ -1,14 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Flight, TravelApiResponse } from '../../types/travel';
+import { Flight, Hotel, TravelApiResponse } from '../../types/travel';
 
 interface TravelUIState {
     tab: string;
     foundFlights: Flight[];
+    hotels: Hotel[];
 }
 
 const initialState: TravelUIState = {
     tab: "chat",
-    foundFlights: []
+    foundFlights: [],
+    hotels: []
 };
 
 const travelSlice = createSlice({
@@ -18,11 +20,14 @@ const travelSlice = createSlice({
         setFlights(state, action: PayloadAction<Flight[]>) {
             state.foundFlights = action.payload;
         },
+        setHotels(state, action: PayloadAction<Hotel[]>) {
+            state.hotels = action.payload;
+        },
         setTab(state, action: PayloadAction<string>) {
             state.tab = action.payload;
         }
     }
 });
 
-export const { setFlights, setTab } = travelSlice.actions;
+export const { setFlights, setHotels, setTab } = travelSlice.actions;
 export default travelSlice.reducer;
