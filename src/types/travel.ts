@@ -10,6 +10,10 @@ export interface FlightsResponse {
 export interface HotelsResponse {
     hotels: Hotel[];
 }
+
+export interface AttractionsResponse {
+    attractions: Attraction[];
+}
 export interface Flight {
     origin: string;
     destination: string;
@@ -58,4 +62,11 @@ export type Rate = {
 export interface HotelDetails {
     rates: Rate[];
     currency: string;
+}
+
+export interface Attraction {
+    name: string;
+    address: string;
+    website: string;
+    openingHours: string;
 }
