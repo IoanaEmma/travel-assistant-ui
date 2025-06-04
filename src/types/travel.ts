@@ -15,6 +15,7 @@ export interface AttractionsResponse {
     attractions: Attraction[];
 }
 export interface Flight {
+    id?: number;
     origin: string;
     destination: string;
     totalPrice: string;
@@ -24,11 +25,13 @@ export interface Flight {
 }
 
 export interface FlightDetails {
+    id?: number;
     segments: FlightSegment[];
     totalStops: number;
 }
 
 export interface FlightSegment {
+    id?: number;
     airline: string;
     flightNumber: string;
     departureAirport: string;
@@ -39,6 +42,7 @@ export interface FlightSegment {
 }
 
 export interface Hotel {
+    id?: number;
     name: string;
     key: string;
     accommodationType: string;
@@ -65,8 +69,22 @@ export interface HotelDetails {
 }
 
 export interface Attraction {
+    id?: number;
     name: string;
     address: string;
     website: string;
     openingHours: string;
+}
+
+export interface Trip {
+    id: string;
+    userId: string;
+    name: string;
+}
+
+type HotelWithoutPrice = Omit<Hotel, "price"> & { rates: Rate[] };
+export interface TripDetails extends Trip {
+    hotel: HotelWithoutPrice;
+    flight: Flight;
+    attractions: Attraction[];
 }
