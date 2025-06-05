@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { TripDetails } from '../types/travel';
+import { getNumberOfDays } from '../utils/helpers';
 
 interface TripDetailsModalProps {
     visible: boolean;
@@ -19,38 +20,72 @@ const TripDetailsModal: React.FC<TripDetailsModalProps> = ({ visible, onClose, t
                         <Text style={styles.title}>{trip.name}</Text>
                         {/* Hotel */}
                         <Text style={styles.sectionTitle}>Hotel</Text>
-                        <View style={styles.section}>
-                            <Text style={styles.label}>Name: <Text style={styles.value}>{trip.hotel.name}</Text></Text>
-                            <Text style={styles.label}>Type: <Text style={styles.value}>{trip.hotel.accommodationType}</Text></Text>
-                            <Text style={styles.label}>Rating: <Text style={styles.value}>{trip.hotel.rating} ⭐</Text></Text>
-                            <Text style={styles.label}>Reviews: <Text style={styles.value}>{trip.hotel.reviews}</Text></Text>
-                            <Text style={styles.label}>City: <Text style={styles.value}>{trip.hotel.city}</Text></Text>
-                            <Text style={styles.label}>Check-in: <Text style={styles.value}>{trip.hotel.checkInDate}</Text></Text>
-                            <Text style={styles.label}>Check-out: <Text style={styles.value}>{trip.hotel.checkOutDate}</Text></Text>
-                            
-                            <Text style={styles.label}>Rates:</Text>
-                            {trip.hotel.rates && trip.hotel.rates.length > 0 ? (
-                                trip.hotel.rates.map((rate, idx) => (
-                                    <View key={idx} style={styles.rateBox}>
-                                        <Text>Provider: {rate.name}</Text>
-                                        <Text>Rate per night: {rate.ratePerNight}</Text>
-                                        <Text>Tax: {rate.tax}</Text>
+                        <View style={styles.hotelCard}>
+                            {trip.hotel ? (
+                                <View style={styles.hotelRow}>
+                                    {/* Hotel Image */}
+                                    {trip.hotel.image ? (
+                                        <Image source={{ uri: trip.hotel.image }} style={styles.hotelImage} />
+                                    ) : (
+                                        <View style={[styles.hotelImage, styles.hotelImagePlaceholder]}>
+                                            <Text style={{ fontSize: 32, color: '#bbb' }}>🏢</Text>
+                                        </View>
+                                    )}
+
+                                    {/* Hotel Info */}
+                                    <View style={styles.hotelInfo}>
+                                        {/* Name */}
+                                        <Text style={styles.hotelName}>{trip.hotel.name}</Text>
+                                        {/* Type and City */}
+                                        <Text style={styles.hotelTypeCity}>
+                                            {trip.hotel.accommodationType} • {trip.hotel.city} • {getNumberOfDays(trip.hotel.checkInDate, trip.hotel.checkOutDate)} nights
+                                        </Text>
+                                        {/* Add a flex spacer to push rating row to the bottom */}
+                                        <View style={{ flex: 1 }} />
+                                        {/* Rating and Reviews at the bottom */}
+                                        <View style={styles.hotelRatingRow}>
+                                            <Text style={styles.hotelRating}>{trip.hotel.rating} ⭐</Text>
+                                            <Text style={styles.hotelReviews}>({trip.hotel.reviews} reviews)</Text>
+                                        </View>
                                     </View>
-                                ))
+
+                                    {/* Rates */}
+                                    <View style={styles.hotelRates}>
+
+                                        {trip.hotel.rates && trip.hotel.rates.length > 0 ? (
+                                            trip.hotel.rates.map((rate, idx) => (
+                                                <View key={idx} style={styles.rateBoxVertical}>
+                                                    <Text style={styles.rateProvider}>{rate.name} - {getNumberOfDays(trip.hotel.checkInDate, trip.hotel.checkOutDate) * (rate.ratePerNight)} {rate.currency}</Text>
+                                                    <Text style={styles.rateDetail}>Rate/night: {rate.ratePerNight}</Text>
+                                                </View>
+                                            ))
+                                        ) : (
+                                            <Text style={styles.value}>No rates available.</Text>
+                                        )}
+                                    </View>
+                                </View>
                             ) : (
-                                <Text style={styles.value}>No rates available.</Text>
+                                <View style={styles.placeholderContainer}>
+                                    <Text style={styles.placeholderIcon}>🏢</Text>
+                                    <Text style={styles.empty}>This trip has no hotel yet</Text>
+                                </View>
                             )}
                         </View>
+
                         {/* Flight */}
                         <Text style={styles.sectionTitle}>Flight</Text>
-                        <View style={styles.section}>
-                            <Text style={styles.label}>From: <Text style={styles.value}>{trip.flight.origin}</Text></Text>
-                            <Text style={styles.label}>To: <Text style={styles.value}>{trip.flight.destination}</Text></Text>
-                            <Text style={styles.label}>Total Price: <Text style={styles.value}>{trip.flight.totalPrice}</Text></Text>
-                            
-                            {/* You can add more flight details here */}
-                        </View>
-                        {/* Attractions */}
+                        {
+                            trip.flight && (
+                                <View style={styles.section}>
+                                    <Text style={styles.label}>From: <Text style={styles.value}>{trip.flight.origin}</Text></Text>
+                                    <Text style={styles.label}>To: <Text style={styles.value}>{trip.flight.destination}</Text></Text>
+                                    <Text style={styles.label}>Total Price: <Text style={styles.value}>{trip.flight.totalPrice}</Text></Text>
+
+                                    {/* You can add more flight details here */}
+                                </View>
+                            )
+                        }
+
                         <Text style={styles.sectionTitle}>Attractions</Text>
                         <View style={styles.section}>
                             {trip.attractions.length === 0 ? (
@@ -84,7 +119,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '80%',
+        width: '50%',
         maxHeight: '80%',
         backgroundColor: '#fff',
         borderRadius: 16,
@@ -118,18 +153,19 @@ const styles = StyleSheet.create({
         fontWeight: 'normal',
         color: '#222',
     },
-    hotelImage: {
-        width: '100%',
-        height: 120,
-        borderRadius: 10,
-        marginVertical: 8,
-        backgroundColor: '#eee',
+    ratesRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 8, // Optional: for spacing between rate boxes (React Native 0.71+)
     },
     rateBox: {
         backgroundColor: '#f0f4f8',
         borderRadius: 8,
         padding: 6,
         marginVertical: 3,
+        marginRight: 8, // Add spacing between boxes for older React Native
+        minWidth: 150,
     },
     attractionBox: {
         backgroundColor: '#f9f9f9',
@@ -152,6 +188,103 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         alignItems: 'center',
+    },
+    placeholderContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 12,
+    },
+    placeholderIcon: {
+        fontSize: 40,
+        marginBottom: 6,
+    },
+    empty: {
+        fontSize: 16,
+        color: '#888',
+    },
+    hotelCard: {
+        backgroundColor: '#f7faff',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 12,
+        marginHorizontal: 2,
+        shadowColor: '#1976d2',
+        shadowOpacity: 0.07,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
+    },
+    hotelRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    hotelImage: {
+        width: 150,
+        height: 150,
+        borderRadius: 10,
+        marginRight: 14,
+        backgroundColor: '#eee',
+    },
+    hotelImagePlaceholder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    hotelInfo: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    hotelName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1976d2',
+    },
+    hotelTypeCity: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 2,
+        marginBottom: 6,
+    },
+    hotelRatingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 75,
+    },
+    hotelRating: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: 'bold',
+        marginRight: 6,
+    },
+    hotelReviews: {
+        fontSize: 13,
+        color: '#888',
+    },
+    hotelRates: {
+        minWidth: 110,
+        marginLeft: 14,
+        alignItems: 'flex-start',
+    },
+    ratesLabel: {
+        fontWeight: 'bold',
+        fontSize: 14,
+        color: '#444',
+        marginBottom: 4,
+    },
+    rateBoxVertical: {
+        backgroundColor: '#f0f4f8',
+        borderRadius: 8,
+        padding: 6,
+        marginBottom: 6,
+        minWidth: 200,
+    },
+    rateProvider: {
+        fontWeight: 'bold',
+        color: '#1976d2',
+        fontSize: 13,
+    },
+    rateDetail: {
+        fontSize: 12,
+        color: '#444',
     },
 });
 
