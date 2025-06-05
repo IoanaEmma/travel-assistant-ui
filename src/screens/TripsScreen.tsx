@@ -2,25 +2,29 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import TripCard from '../components/Trip';
 import TripDetailsModal from '../components/TripDetailsModal';
+import CreateTripModal from '../components/CreateTripModal';
 import { Trip, TripDetails } from '../types/travel';
-import { useGetTripsQuery, useLazyGetTripDetailsQuery } from '../features/trip/tripApi';
-
+import { useGetTripsQuery, useLazyGetTripDetailsQuery, useCreateTripMutation } from '../features/trip/tripApi';
 
 export default function Trips() {
 	const { data: trips = [], isLoading } = useGetTripsQuery("1");
 	const [modalVisible, setModalVisible] = useState(false);
-
+	const [createModalVisible, setCreateModalVisible] = useState(false);
 	const [getTripDetails, { data: tripDetails, isLoading: isDetailsLoading }] = useLazyGetTripDetailsQuery();
+	const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
 
-	// Simulate fetching trip details (replace with real API call if needed)
 	const handleTripPress = async (trip: Trip) => {
-		// Here you would fetch TripDetails by trip.id
 		await getTripDetails({ userId: "1", tripId: trip.id });
 		setModalVisible(true);
 	};
 
 	const handleCreateTrip = () => {
-		// Show create trip modal or navigate
+		setCreateModalVisible(true);
+	};
+
+	const handleCreateTripSubmit = async (tripName: string) => {
+		await createTrip({ userId: "1", name: tripName });
+		setCreateModalVisible(false);
 	};
 
 	const renderTrip = ({ item }: { item: Trip }) => (
@@ -54,6 +58,12 @@ export default function Trips() {
 				visible={modalVisible}
 				onClose={() => setModalVisible(false)}
 				trip={tripDetails as TripDetails}
+			/>
+			<CreateTripModal
+				visible={createModalVisible}
+				onClose={() => setCreateModalVisible(false)}
+				onCreate={handleCreateTripSubmit}
+				loading={isCreating}
 			/>
 		</View>
 	);
