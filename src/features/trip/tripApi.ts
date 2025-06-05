@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { Trip } from '../../types/travel';
+import { Trip, TripDetails } from '../../types/travel';
 import config from '../../config';
-import { setTrips, addTrip } from './tripSlice';
+import { setTrips, addTrip, setSelectedTrip } from './tripSlice';
 
 export const tripApi = createApi({
     reducerPath: 'tripApi',
@@ -23,6 +23,12 @@ export const tripApi = createApi({
                 }
             }
         }),
+        getTripDetails: builder.query<TripDetails, { userId: string; tripId: string }>({
+            query: ({ userId, tripId }) => ({
+                url: `/trip/${userId}/${tripId}`,
+                method: 'GET',
+            })
+        }),
         createTrip: builder.mutation<Trip, Partial<Trip>>({
             query: (newTrip) => ({
                 url: '/trip',
@@ -43,4 +49,9 @@ export const tripApi = createApi({
     }),
 });
 
-export const { useGetTripsQuery } = tripApi;
+export const {
+    useGetTripsQuery,
+    useGetTripDetailsQuery,
+    useLazyGetTripDetailsQuery, // <-- add this line
+    useCreateTripMutation
+} = tripApi;

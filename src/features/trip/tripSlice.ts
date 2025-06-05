@@ -1,12 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Trip } from '../../types/travel';
+import { Trip, TripDetails } from '../../types/travel';
 
 interface TripState {
     trips: Trip[];
+    selectedTrip: TripDetails | null;
 }
 
 const initialState: TripState = {
     trips: [],
+    selectedTrip: null,
 }
 
 const tripSlice = createSlice({
@@ -19,8 +21,12 @@ const tripSlice = createSlice({
         addTrip(state, action: PayloadAction<Trip>) {
             state.trips.push(action.payload);
         },
+        setSelectedTrip(state, action: PayloadAction<TripDetails | null>) {
+            console.log("Setting selected trip:", action.payload);
+            state.selectedTrip = action.payload;
+        },
     }
 });
 
-export const { setTrips, addTrip } = tripSlice.actions;
+export const { setTrips, addTrip, setSelectedTrip } = tripSlice.actions;
 export default tripSlice.reducer;
