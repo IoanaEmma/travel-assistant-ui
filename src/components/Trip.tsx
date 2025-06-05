@@ -1,15 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Trip } from '../types/travel';
 
 interface TripProps {
     trip: Trip;
+    onPress?: () => void;
 }
 
-const TripCard: React.FC<TripProps> = ({ trip }) => (
-    <View style={styles.card}>
-        <Text style={styles.name}>{trip.name}</Text>
-    </View>
+const TripCard: React.FC<TripProps> = ({ trip, onPress }) => (
+    <Pressable onPress={onPress}>
+        <View style={styles.card}>
+            <Text style={styles.name}>{trip.name}</Text>
+        </View>
+    </Pressable>
 );
 
 const styles = StyleSheet.create({
