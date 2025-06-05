@@ -6,12 +6,14 @@ import { setTrips, addTrip, setSelectedTrip } from './tripSlice';
 export const tripApi = createApi({
     reducerPath: 'tripApi',
     baseQuery: fetchBaseQuery({ baseUrl: config.API_URL }),
+    tagTypes: ['Trips'],
     endpoints: (builder) => ({
         getTrips: builder.query<Trip[], string>({ // string = userId
             query: (userId) => ({
                 url: `/trip/${userId}`,
                 method: 'GET',
             }),
+            providesTags: ["Trips"],
             async onQueryStarted(userId, { queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
@@ -35,6 +37,7 @@ export const tripApi = createApi({
                 method: 'POST',
                 body: newTrip,
             }),
+            invalidatesTags: ["Trips"],
             async onQueryStarted(newTrip, { queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
