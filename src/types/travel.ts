@@ -62,6 +62,7 @@ export type Rate = {
     name: string;
     ratePerNight: number;
     tax: number;
+    currency?: string;
 }
 export interface HotelDetails {
     rates: Rate[];
