@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Pressable, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Hotel, Rate } from '../types/travel';
 import { useGetHotelDetailsQuery } from '../features/hotel/hotelApi';
+import HotelDetails from './HotelDetails';
+import { useCreateTripMutation, useGetTripsQuery } from '../features/trip/tripApi';
+import AddToTripModal from './modals/AddToTripModal';
 
 interface HotelProps {
   hotel: Hotel;
@@ -9,6 +12,12 @@ interface HotelProps {
 
 const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [addToTripModalVisible, setAddToTripModalVisible] = useState(false);
+  const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
+
+  // Get active trips for dropdown
+  const { data: trips = [] } = useGetTripsQuery("1");
+  const activeTrips = trips.filter(trip => trip.status === 'active' || !trip.status);
 
   // Only fetch details when modal is visible
   const { data: hotelDetails, isLoading } = useGetHotelDetailsQuery(
@@ -19,6 +28,20 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
     }, {
     skip: !modalVisible,
   });
+
+  const handleAddToTrip = (e: any) => {
+    e.stopPropagation(); // Prevent opening the hotel details modal
+    setAddToTripModalVisible(true);
+  };
+
+  const handleSelectTrip = (tripId: string) => {
+    console.log('Adding hotel to trip:', tripId);
+    setAddToTripModalVisible(false);
+  };
+
+  const handleCreateNewTrip = async () => {
+    await createTrip({ userId: "1", name: hotel.city, when: hotel.checkInDate + ' to ' + hotel.checkOutDate });
+  };
 
   return (
     <>
@@ -35,8 +58,17 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
             <Text style={styles.rating}>Rating: {hotel.rating} ⭐</Text>
             <Text style={styles.price}>Price range: {hotel.price.min} - {hotel.price.max}</Text>
           </View>
+          {/* Add to Trip Button */}
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={handleAddToTrip}
+          >
+            <Text style={styles.addButtonText}>+ Add to Trip</Text>
+          </TouchableOpacity>
         </View>
       </Pressable>
+
+      {/* Hotel Details Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -44,42 +76,38 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {isLoading ? (
-              <ActivityIndicator size="large" color="#1976d2" />
-            ) : hotelDetails ? (
-              <>
-                <Text style={styles.modalTitle}>{hotel.name}</Text>
-                <Image source={{ uri: hotel.image }} style={styles.modalImage} />
-                <Text>Reviews: {hotel.reviews}</Text>
-                <Text>Rating: {hotel.rating} ⭐</Text>
-                <Text>Price range: {hotel.price.min} - {hotel.price.max}</Text>
-                <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Rates:</Text>
-                {hotelDetails.rates && hotelDetails.rates.length > 0 ? (
-                  hotelDetails.rates.map((rate: Rate, idx: number) => (
-                    <View key={idx} style={{ marginVertical: 4 }}>
-                      <Text>Provider: {rate.name}</Text>
-                      <Text>Price per night: {rate.ratePerNight} {hotelDetails.currency}</Text>
-                      <Text>Tax: {rate.tax} {hotelDetails.currency}</Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text>No rates available.</Text>
-                )}
-              </>
-            ) : (
-              <Text>Failed to load hotel details.</Text>
-            )}
-            <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={{ color: '#fff' }}>Close</Text>
-            </Pressable>
-          </View>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#1976d2" />
+          ) : (
+            <View style={styles.modalContent}>
+              {hotelDetails ? (
+                <>
+                  <HotelDetails hotel={hotel} rates={hotelDetails.rates} currency={hotelDetails.currency} />
+                  <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                    <Text style={{ color: '#fff' }}>Close</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Text>Failed to load hotel details.</Text>
+              )}
+            </View>
+          )}
         </View>
       </Modal>
+
+      {/* Add to Trip Modal */}
+      <AddToTripModal
+        visible={addToTripModalVisible}
+        onClose={() => setAddToTripModalVisible(false)}
+        activeTrips={activeTrips}
+        onSelectTrip={handleSelectTrip}
+        onCreateNewTrip={handleCreateNewTrip}
+      />
     </>
   );
 };
 
+// Remove the modal-related styles from Hotel.tsx styles since they're now in AddToTripModal
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
@@ -128,6 +156,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 4,
   },
+  addButton: {
+    backgroundColor: '#1976d2',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginLeft: 16,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -135,24 +175,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    width: 320,
+    width: 700,
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    fontSize: 20,
-    marginBottom: 10,
-    color: '#1976d2',
-  },
-  modalImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 12,
-    backgroundColor: '#eee',
+    maxHeight: '80%',
   },
   closeButton: {
     marginTop: 16,
