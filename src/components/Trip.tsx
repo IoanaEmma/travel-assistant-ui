@@ -1,38 +1,120 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
 import { Trip } from '../types/travel';
 
 interface TripProps {
     trip: Trip;
     onPress?: () => void;
+    onComplete?: () => void;
+    onCancel?: () => void;
 }
 
-const TripCard: React.FC<TripProps> = ({ trip, onPress }) => (
+const statusIcon = (status?: string) => {
+    switch (status) {
+        case 'completed':
+            return '✅';
+        case 'canceled':
+            return '❌';
+        default:
+            return '🔄';
+    }
+};
+
+const TripCard: React.FC<TripProps> = ({ trip, onPress, onComplete, onCancel }) => (
     <Pressable onPress={onPress}>
         <View style={styles.card}>
-            <Text style={styles.name}>{trip.name}</Text>
+            <View style={styles.textContainer}>
+                <Text style={styles.name}>{trip.name}</Text>
+                <Text style={styles.when}> {trip.when || ' '}</Text>
+                {trip.status === 'active' && (
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.completeButton]}
+                            onPress={onComplete}
+                        >
+                            <Text style={styles.buttonText}>Complete</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.cancelButton]}
+                            onPress={onCancel}
+                        >
+                            <Text style={styles.buttonText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+            <View style={styles.statusIconContainer}>
+                <Text style={styles.statusIcon}>{statusIcon(trip.status)}</Text>
+            </View>
         </View>
     </Pressable>
 );
 
 const styles = StyleSheet.create({
     card: {
+        width: 300,
+        minHeight: 100,
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginVertical: 8,
-        marginHorizontal: 8,
+        borderRadius: 10,
+        padding: 10,
+        marginVertical: 12,
+        marginHorizontal: 12,
         elevation: 2,
         shadowColor: '#000',
         shadowOpacity: 0.08,
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
-        alignItems: 'center',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        position: 'relative',
+    },
+    textContainer: {
+        flex: 1,
+        paddingRight: 8,
     },
     name: {
-        fontSize: 18,
+        marginLeft: 6,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#1976d2',
+    },
+    when: {
+        fontSize: 12,
+        color: '#888',
+        marginTop: 2,
+        marginBottom: 8,
+        marginLeft: 6
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 8,
+    },
+    actionButton: {
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 6,
+        marginRight: 6,
+    },
+    completeButton: {
+        backgroundColor: '#1976d2',
+    },
+    cancelButton: {
+        backgroundColor: '#888888',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    statusIconContainer: {
+        position: 'absolute',
+        right: 8,
+        top: 6,
+    },
+    statusIcon: {
+        fontSize: 20,
     },
 });
 

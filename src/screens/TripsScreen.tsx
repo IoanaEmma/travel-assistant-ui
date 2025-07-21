@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import TripCard from '../components/Trip';
-import TripDetailsModal from '../components/TripDetailsModal';
-import CreateTripModal from '../components/CreateTripModal';
+import TripDetailsModal from '../components/modals/TripDetailsModal';
+import CreateTripModal from '../components/modals/CreateTripModal';
 import { Trip, TripDetails } from '../types/travel';
-import { useGetTripsQuery, useLazyGetTripDetailsQuery, useCreateTripMutation } from '../features/trip/tripApi';
+import { useGetTripsQuery, useLazyGetTripDetailsQuery, useCreateTripMutation, useUpdateTripMutation } from '../features/trip/tripApi';
+import { useRouter } from 'expo-router';
+
+const TABS = ['Active', 'Completed', 'Canceled'] as const;
+type TabType = typeof TABS[number];
+const router = useRouter();
 
 export default function Trips() {
 	const { data: trips = [], isLoading } = useGetTripsQuery("1");
@@ -12,48 +17,97 @@ export default function Trips() {
 	const [createModalVisible, setCreateModalVisible] = useState(false);
 	const [getTripDetails, { data: tripDetails, isLoading: isDetailsLoading }] = useLazyGetTripDetailsQuery();
 	const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
+	const [updateTrip, { isLoading: isUpdating }] = useUpdateTripMutation();
+	const [selectedTab, setSelectedTab] = useState<TabType>('Active');
 
 	const handleTripPress = async (trip: Trip) => {
 		await getTripDetails({ userId: "1", tripId: trip.id });
-		setModalVisible(true);
+		router.push(`/trip/${trip.id}`);
+		// setModalVisible(true);
 	};
 
 	const handleCreateTrip = () => {
 		setCreateModalVisible(true);
 	};
 
-	const handleCreateTripSubmit = async (tripName: string) => {
-		await createTrip({ userId: "1", name: tripName });
+	const handleCreateTripSubmit = async (tripName: string, when: string) => {
+		await createTrip({ userId: "1", name: tripName, when: when });
 		setCreateModalVisible(false);
 	};
 
+	const handleTripComplete = async (trip: Trip) => {
+		const updatedTrip = { ...trip, status: 'completed' };
+		await updateTrip(updatedTrip);
+		await getTripDetails({ userId: "1", tripId: trip.id });
+	};
+
+	const handleTripCancel = async (trip: Trip) => {
+		const updatedTrip = { ...trip, status: 'canceled' };
+		await updateTrip(updatedTrip);
+		await getTripDetails({ userId: "1", tripId: trip.id });
+	}
+
 	const renderTrip = ({ item }: { item: Trip }) => (
-		<TripCard trip={item} onPress={() => handleTripPress(item)} />
+		<TripCard trip={item} onPress={() => handleTripPress(item)} onComplete={() => handleTripComplete(item)}
+			onCancel={() => handleTripCancel(item)} />
+
 	);
+
+	// Filter trips based on selected tab
+	const filteredTrips = trips.filter(trip => {
+		if (selectedTab === 'Active') return trip.status === 'active' || !trip.status;
+		if (selectedTab === 'Completed') return trip.status === 'completed';
+		if (selectedTab === 'Canceled') return trip.status === 'canceled';
+		return true;
+	});
 
 	return (
 		<View style={styles.container}>
 			<Text style={styles.title}>Trips</Text>
-			<TouchableOpacity style={styles.createButton} onPress={handleCreateTrip}>
-				<Text style={styles.createButtonText}>+ Create New Trip</Text>
-			</TouchableOpacity>
+
+			{/* Tabs */}
+			<View style={styles.tabsContainer}>
+				{TABS.map(tab => (
+					<TouchableOpacity
+						key={tab}
+						style={[
+							styles.tab,
+							selectedTab === tab && styles.tabSelected
+						]}
+						onPress={() => setSelectedTab(tab)}
+					>
+						<Text style={[
+							styles.tabText,
+							selectedTab === tab && styles.tabTextSelected
+						]}>
+							{tab}
+						</Text>
+					</TouchableOpacity>
+				))}
+			</View>
+
 			{isLoading ? (
 				<View style={styles.loadingContainer}>
 					<ActivityIndicator size="large" color="#1976d2" />
 				</View>
-			) : trips.length === 0 ? (
+			) : filteredTrips.length === 0 ? (
 				<View style={styles.placeholderContainer}>
 					<Text style={styles.placeholderIcon}>🧳</Text>
 					<Text style={styles.empty}>No trips yet</Text>
 				</View>
 			) : (
 				<FlatList
-					data={trips}
+					data={filteredTrips}
 					keyExtractor={item => item.id}
 					renderItem={renderTrip}
-					contentContainerStyle={{ paddingVertical: 8 }}
+					numColumns={4}
+					columnWrapperStyle={{ justifyContent: 'flex-start' }}
+					contentContainerStyle={{ paddingVertical: 20, paddingHorizontal: 20, marginTop: 16 }}
 				/>
 			)}
+			<TouchableOpacity style={styles.createButton} onPress={handleCreateTrip}>
+				<Text style={styles.createButtonText}>+ Create New Trip</Text>
+			</TouchableOpacity>
 			<TripDetailsModal
 				visible={modalVisible}
 				onClose={() => setModalVisible(false)}
@@ -70,8 +124,30 @@ export default function Trips() {
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1, padding: 16 },
-	title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
+	container: { flex: 1, padding: 16, backgroundColor: '#f0f4f8' },
+	title: { fontSize: 24, fontWeight: 'bold', marginBottom: 24 },
+	tabsContainer: {
+		flexDirection: 'row',
+		justifyContent: 'flex-start',
+		marginBottom: 12,
+	},
+	tab: {
+		paddingVertical: 8,
+		paddingHorizontal: 20,
+		borderRadius: 20,
+		backgroundColor: '#e3eafc',
+		marginHorizontal: 4,
+	},
+	tabSelected: {
+		backgroundColor: '#1976d2',
+	},
+	tabText: {
+		color: '#1976d2',
+		fontWeight: 'bold',
+	},
+	tabTextSelected: {
+		color: '#fff',
+	},
 	createButton: {
 		backgroundColor: '#1976d2',
 		paddingVertical: 12,
@@ -109,5 +185,5 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		marginTop: 48,
-	},
+	}
 });
