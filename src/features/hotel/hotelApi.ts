@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { HotelDetails } from '../../types/travel';
+import { HotelDetails, Hotel } from '../../types/travel';
 import config from '../../config';
-import { setHotelDetails } from './hotelSlice';
+import { setCurrentHotel, setHotelDetails } from './hotelSlice';
 
 export const hotelApi = createApi({
     reducerPath: 'hotelApi',
@@ -28,7 +28,24 @@ export const hotelApi = createApi({
                 }
             }
         }),
+        createHotel: builder.mutation<Hotel, Partial<Hotel>>({
+            query: (newHotel) => ({
+                url: `/hotel`,
+                method: 'POST',
+                body: newHotel,
+            }),
+            async onQueryStarted(newHotel, { queryFulfilled }) {
+                try {
+                    const { data } = await queryFulfilled;
+                    if (data) {
+                        setCurrentHotel(data);
+                    }
+                } catch (error) {
+                    console.error('Failed to create hotel:', error);
+                }
+            }
+        }),
     }),
 });
 
-export const { useGetHotelDetailsQuery } = hotelApi;
+export const { useGetHotelDetailsQuery, useCreateHotelMutation } = hotelApi;

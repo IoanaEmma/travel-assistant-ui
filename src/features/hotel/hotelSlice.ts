@@ -1,12 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { HotelDetails } from '../../types/travel';
+import { Hotel, HotelDetails } from '../../types/travel';
 
 interface HotelState {
     hotelDetails: HotelDetails | null;
+    currentHotel: Hotel | null;
 }
 
 const initialState: HotelState = {
     hotelDetails: null,
+    currentHotel: null,
 }
 
 const hotelSlice = createSlice({
@@ -18,9 +20,12 @@ const hotelSlice = createSlice({
         },
         clearHotelDetails(state) {
             state.hotelDetails = null;
+        },
+        setCurrentHotel(state, action: PayloadAction<Hotel | null>) {
+            state.currentHotel = action.payload;
         }
     }
 });
 
-export const { setHotelDetails, clearHotelDetails } = hotelSlice.actions;
+export const { setHotelDetails, clearHotelDetails, setCurrentHotel } = hotelSlice.actions;
 export default hotelSlice.reducer;
