@@ -1,7 +1,8 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
-import { TripDetails } from '../types/travel';
-import { getNumberOfDays } from '../utils/helpers';
+import { TripDetails } from '../../types/travel';
+import { getNumberOfDays } from '../../utils/helpers';
+import FlightComponent from '../Flight';
 
 interface TripDetailsModalProps {
     visible: boolean;
@@ -28,7 +29,7 @@ const TripDetailsModal: React.FC<TripDetailsModalProps> = ({ visible, onClose, t
                                         <Image source={{ uri: trip.hotel.image }} style={styles.hotelImage} />
                                     ) : (
                                         <View style={[styles.hotelImage, styles.hotelImagePlaceholder]}>
-                                            <Text style={{ fontSize: 32, color: '#bbb' }}>🏢</Text>
+                                            <Text style={{ fontSize: 20, color: '#bbb' }}>🏢</Text>
                                         </View>
                                     )}
 
@@ -74,17 +75,19 @@ const TripDetailsModal: React.FC<TripDetailsModalProps> = ({ visible, onClose, t
 
                         {/* Flight */}
                         <Text style={styles.sectionTitle}>Flight</Text>
-                        {
-                            trip.flight && (
-                                <View style={styles.section}>
-                                    <Text style={styles.label}>From: <Text style={styles.value}>{trip.flight.origin}</Text></Text>
-                                    <Text style={styles.label}>To: <Text style={styles.value}>{trip.flight.destination}</Text></Text>
-                                    <Text style={styles.label}>Total Price: <Text style={styles.value}>{trip.flight.totalPrice}</Text></Text>
 
-                                    {/* You can add more flight details here */}
-                                </View>
-                            )
-                        }
+                        {trip.flight ? (
+                            <View style={styles.flightWrapper}>
+                                <FlightComponent flight={trip.flight} />
+                            </View>
+
+                        ) : (
+                            <View style={styles.placeholderContainer}>
+                                <Text style={styles.placeholderIcon}>✈️</Text>
+                                <Text style={styles.empty}>This trip has no flight yet</Text>
+                            </View>
+                        )}
+
 
                         <Text style={styles.sectionTitle}>Attractions</Text>
                         <View style={styles.section}>
@@ -112,6 +115,11 @@ const TripDetailsModal: React.FC<TripDetailsModalProps> = ({ visible, onClose, t
 };
 
 const styles = StyleSheet.create({
+    flightWrapper: {
+        // flex: 1,
+        // justifyContent: 'center',
+        // alignItems: 'center',
+    },
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.35)',
@@ -119,12 +127,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '50%',
+        width: '43%',
         maxHeight: '80%',
-        backgroundColor: '#fff',
+        backgroundColor: '#f7faff',
         borderRadius: 16,
-        padding: 18,
+        padding: 30,
         elevation: 6,
+        alignItems: 'center',
     },
     title: {
         fontSize: 22,
@@ -183,6 +192,7 @@ const styles = StyleSheet.create({
         color: '#444',
     },
     closeButton: {
+        width: 50,
         marginTop: 16,
         backgroundColor: '#1976d2',
         paddingVertical: 10,
@@ -203,7 +213,8 @@ const styles = StyleSheet.create({
         color: '#888',
     },
     hotelCard: {
-        backgroundColor: '#f7faff',
+        width: 700,
+        backgroundColor: '#fff',
         borderRadius: 14,
         padding: 14,
         marginBottom: 12,
@@ -219,8 +230,8 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     hotelImage: {
-        width: 150,
-        height: 150,
+        width: 140,
+        height: 140,
         borderRadius: 10,
         marginRight: 14,
         backgroundColor: '#eee',
@@ -234,7 +245,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     hotelName: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#1976d2',
     },
