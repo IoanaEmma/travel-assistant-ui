@@ -81,9 +81,11 @@ export interface Trip {
     id: string;
     userId: string;
     name: string;
+    when: string;
+    status?: string;
 }
 
-type HotelWithoutPrice = Omit<Hotel, "price"> & { rates: Rate[] };
+type HotelWithoutPrice = Hotel & { rates: Rate[] };
 export interface TripDetails extends Trip {
     hotel: HotelWithoutPrice;
     flight: Flight;
