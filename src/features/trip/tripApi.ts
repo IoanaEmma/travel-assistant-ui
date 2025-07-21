@@ -48,13 +48,22 @@ export const tripApi = createApi({
                     console.error('Failed to create trip:', error);
                 }
             }
+        }),
+        updateTrip: builder.mutation<Trip, Partial<Trip>>({
+            query: (updatedTrip) => ({
+                url: `/trip/update/${updatedTrip.id}`,
+                method: 'PUT',
+                body: updatedTrip,
+            }),
+            invalidatesTags: ["Trips"]
         })
-    }),
+    })
 });
 
 export const {
     useGetTripsQuery,
     useGetTripDetailsQuery,
     useLazyGetTripDetailsQuery, // <-- add this line
-    useCreateTripMutation
+    useCreateTripMutation,
+    useUpdateTripMutation
 } = tripApi;
