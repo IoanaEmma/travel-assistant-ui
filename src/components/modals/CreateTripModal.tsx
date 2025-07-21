@@ -4,22 +4,25 @@ import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'reac
 interface CreateTripModalProps {
     visible: boolean;
     onClose: () => void;
-    onCreate: (tripName: string) => void;
+    onCreate: (tripName: string, when: string) => void;
     loading?: boolean;
 }
 
 const CreateTripModal: React.FC<CreateTripModalProps> = ({ visible, onClose, onCreate, loading }) => {
     const [tripName, setTripName] = useState('');
+    const [tripWhen, setTripWhen] = useState('');
 
     const handleCreate = () => {
         if (tripName.trim()) {
-            onCreate(tripName.trim());
+            onCreate(tripName.trim(), tripWhen.trim());
             setTripName('');
+            setTripWhen('');
         }
     };
 
     const handleClose = () => {
         setTripName('');
+        setTripWhen('');
         onClose();
     };
 
@@ -30,9 +33,16 @@ const CreateTripModal: React.FC<CreateTripModalProps> = ({ visible, onClose, onC
                     <Text style={styles.title}>Create New Trip</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="Trip name"
+                        placeholder="Name"
                         value={tripName}
                         onChangeText={setTripName}
+                        editable={!loading}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="When"
+                        value={tripWhen}
+                        onChangeText={setTripWhen}
                         editable={!loading}
                     />
                     <View style={styles.buttonRow}>
