@@ -1,13 +1,46 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Flight } from '../types/travel';
 import { formatDateTime } from '../utils/helpers';
+import { useGetTripsQuery, useCreateTripMutation, useAddItemToTripMutation } from '../features/trip/tripApi';
+import { useCreateFlightMutation } from '../features/flight/flightApi';
+import AddToTripModal from './modals/AddToTripModal';
 
 interface FlightProps {
   flight: Flight;
+  readonly?: boolean; // Optional prop to make the component read-only
 }
 
-const FlightComponent: React.FC<FlightProps> = ({ flight }) => {
+const FlightComponent: React.FC<FlightProps> = ({ flight, readonly }) => {
+  const [addToTripModalVisible, setAddToTripModalVisible] = useState(false);
+  const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
+  const [createFlight, { isLoading: isCreatingFlight }] = useCreateFlightMutation();
+  const [addItemToTrip] = useAddItemToTripMutation();
+
+  // Get active trips for dropdown
+  const { data: trips = [] } = useGetTripsQuery("1");
+  const activeTrips = trips.filter(trip => trip.status === 'active' || !trip.status);
+
+  const handleAddToTrip = () => {
+    setAddToTripModalVisible(true);
+  };
+
+  const handleSelectTrip = async (tripId: string) => {
+    console.log('Adding flight to trip:', tripId);
+    const currentFlight = await createFlight(flight).unwrap();
+    if (currentFlight) {
+      console.log('Flight created:', currentFlight);
+      await addItemToTrip({ tripId, item: { type: 'flight', itemId: currentFlight.id! } });
+    }
+
+    setAddToTripModalVisible(false);
+  };
+
+  const handleCreateNewTrip = async () => {
+    console.log('Creating new trip for flight');
+    await createTrip({ userId: "1", name: flight.destination, when: flight.departureFlight.segments[0].departureTime });
+  };
+
   // Helper to get summary for a flight direction (departure/return)
   const renderFlightSummary = (segments: any[], title: string) => {
     if (!segments || segments.length === 0) return null;
@@ -35,13 +68,37 @@ const FlightComponent: React.FC<FlightProps> = ({ flight }) => {
   };
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.price}>Total Price: {flight.totalPrice}</Text>
-      <View style={styles.directionsRow}>
-        {renderFlightSummary(flight.departureFlight.segments, 'Departure')}
-        {renderFlightSummary(flight.returnFlight?.segments || [], 'Return')}
+    <>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.price}>Total Price: {flight.totalPrice}</Text>
+
+          {/* Add to Trip Button - only show if not readonly */}
+          {!readonly && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleAddToTrip}
+            >
+              <Text style={styles.addButtonText}>+ Add to Trip</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.directionsRow}>
+          {renderFlightSummary(flight.departureFlight.segments, 'Departure')}
+          {renderFlightSummary(flight.returnFlight?.segments || [], 'Return')}
+        </View>
       </View>
-    </View>
+
+      {/* Add to Trip Modal */}
+      <AddToTripModal
+        visible={addToTripModalVisible}
+        onClose={() => setAddToTripModalVisible(false)}
+        activeTrips={activeTrips}
+        onSelectTrip={handleSelectTrip}
+        onCreateNewTrip={handleCreateNewTrip}
+      />
+    </>
   );
 };
 
@@ -61,19 +118,37 @@ const styles = StyleSheet.create({
     // Elevation for Android
     elevation: 5,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   price: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 10,
     color: '#1976d2',
+    flex: 1,
+  },
+  addButton: {
+    backgroundColor: '#1976d2',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   directionContainer: {
     marginBottom: 10,
+    width: '50%'
   },
   directionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 16, // for RN 0.71+, otherwise use marginRight on directionContainer
+    gap: 16,
   },
   directionTitle: {
     fontWeight: 'bold',
