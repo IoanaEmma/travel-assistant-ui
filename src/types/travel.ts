@@ -91,3 +91,8 @@ export interface TripDetails extends Trip {
     flight: Flight;
     attractions: Attraction[];
 }
+
+export interface TripItem {
+    type: 'flight' | 'hotel' | 'attraction';
+    itemId: number;
+}

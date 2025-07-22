@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { Trip, TripDetails } from '../../types/travel';
+import { Trip, TripDetails, TripItem } from '../../types/travel';
 import config from '../../config';
 import { setTrips, addTrip, setSelectedTrip } from './tripSlice';
 
@@ -56,6 +56,14 @@ export const tripApi = createApi({
                 body: updatedTrip,
             }),
             invalidatesTags: ["Trips"]
+        }),
+        addItemToTrip: builder.mutation<Trip, { tripId: string; item: TripItem }>({
+            query: ({ tripId, item }) => ({
+                url: `/trip/add-item/${tripId}`,
+                method: 'PUT',
+                body: item,
+            }),
+            invalidatesTags: ["Trips"]
         })
     })
 });
@@ -65,5 +73,6 @@ export const {
     useGetTripDetailsQuery,
     useLazyGetTripDetailsQuery, // <-- add this line
     useCreateTripMutation,
-    useUpdateTripMutation
+    useUpdateTripMutation,
+    useAddItemToTripMutation
 } = tripApi;
