@@ -2,10 +2,10 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 
 const tabs = [
-    { label: 'Home', route: '/' },
+    { label: 'Home', route: '/home' },
     { label: 'Flights', route: '/flights' },
     { label: 'Hotels', route: '/hotels' },
-    { label: 'Local Attractions', route: '/attractions' },
+    { label: 'Attractions', route: '/attractions' },
     { label: 'Trips', route: '/trip' },
 ];
 
@@ -16,7 +16,7 @@ export default function SideNav() {
     return (
         <View style={styles.nav}>
             {tabs.map((tab) => {
-                const isActive = pathname === tab.route;
+                const isActive = pathname.includes(tab.route);
                 return (
                     <Pressable
                         key={tab.route}
