@@ -18,71 +18,109 @@ export default function TripDetailsScreen() {
     if (!tripDetails) return <Text>Loading...</Text>;
 
     return (
-        <ScrollView>
+        <View style={styles.container}>
+
             <View style={styles.modalContent}>
-                <ScrollView>
-                    <Text style={styles.title}>{tripDetails.name}</Text>
-                    {/* Hotel */}
+                <Text style={styles.title}>{tripDetails.name  + ' - Trip Details'}</Text>
 
-                    <Text style={styles.sectionTitle}>Hotel</Text>
-                    <HotelDetails hotel={tripDetails.hotel} rates={tripDetails.hotel.rates} currency={tripDetails.hotel.rates[0].currency} />
-                    
-                    {/* Flight */}
-                    <Text style={styles.sectionTitle}>Flight</Text>
-
-                    {tripDetails.flight ? (
-                        <View style={styles.flightWrapper}>
-                            <FlightComponent flight={tripDetails.flight} />
-                        </View>
-
-                    ) : (
-                        <View style={styles.placeholderContainer}>
-                            <Text style={styles.placeholderIcon}>✈️</Text>
-                            <Text style={styles.empty}>This trip has no flight yet</Text>
-                        </View>
-                    )}
-
-
-                    <Text style={styles.sectionTitle}>Attractions</Text>
-                    <View style={styles.section}>
-                        {tripDetails.attractions.length === 0 ? (
-                            <Text style={styles.value}>No attractions added.</Text>
+                <View style={styles.columnsContainer}>
+                    {/* Left Column - Hotel and Flight */}
+                    <View style={styles.leftColumn}>
+                        {/* Hotel */}
+                        <Text style={styles.sectionTitle}>Hotel</Text>
+                        {tripDetails.hotel ? (
+                            <HotelDetails hotel={tripDetails.hotel} rates={tripDetails.hotel.rates} currency={tripDetails.hotel.rates[0].currency} />
                         ) : (
-                            tripDetails.attractions.map((attr, idx) => (
-                                <View key={idx} style={styles.attractionBox}>
-                                    <Text style={styles.attractionName}>{attr.name}</Text>
-                                    <Text style={styles.attractionDetail}>Address: {attr.address}</Text>
-                                    <Text style={styles.attractionDetail}>Website: {attr.website}</Text>
-                                    <Text style={styles.attractionDetail}>Opening Hours: {attr.openingHours}</Text>
-                                </View>
-                            ))
+                            <View style={styles.placeholderContainer}>
+                                <Text style={styles.placeholderIcon}>🏢</Text>
+                                <Text style={styles.empty}>This trip has no hotel yet</Text>
+                            </View>
+                        )}
+
+                        {/* Flight */}
+                        <Text style={styles.sectionTitle}>Flight</Text>
+                        {tripDetails.flight ? (
+                            <View >
+                                <FlightComponent flight={tripDetails.flight} readonly={true} />
+                            </View>
+                        ) : (
+                            <View style={styles.placeholderContainer}>
+                                <Text style={styles.placeholderIcon}>✈️</Text>
+                                <Text style={styles.empty}>This trip has no flight yet</Text>
+                            </View>
                         )}
                     </View>
-                </ScrollView>
+
+                    {/* Right Column - Attractions */}
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.sectionTitle}>Attractions</Text>
+                        <View style={styles.section}>
+                            {tripDetails.attractions.length === 0 ? (
+                                <View style={styles.placeholderContainer}>
+                                    <Text style={styles.placeholderIcon}>🎡</Text>
+                                    <Text style={styles.empty}>No attractions added yet</Text>
+                                </View>
+                            ) : (
+                                tripDetails.attractions.map((attr, idx) => (
+                                    <View key={idx} style={styles.attractionBox}>
+                                        <Text style={styles.attractionName}>{attr.name}</Text>
+                                        <Text style={styles.attractionDetail}>Address: {attr.address}</Text>
+                                        <Text style={styles.attractionDetail}>Website: {attr.website}</Text>
+                                        <Text style={styles.attractionDetail}>Opening Hours: {attr.openingHours}</Text>
+                                    </View>
+                                ))
+                            )}
+                        </View>
+                    </View>
+                </View>
             </View>
 
-        </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    flightWrapper: {
-        // flex: 1,
-        // justifyContent: 'center',
-        // alignItems: 'center',
+    container: {
+        flex: 1,
+        backgroundColor: '#f7faff',
+        width: '100%',
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100%',
+        paddingVertical: 20,
+        width: '100%',
     },
     modalContent: {
-        backgroundColor: '#f7faff',
         padding: 30,
         elevation: 6,
-        alignItems: 'center',
+        alignItems: 'flex-start'
     },
     title: {
         fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 12,
+        marginBottom: 20,
         color: '#1976d2',
         textAlign: 'center',
+    },
+    columnsContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        gap: 20,
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+    },
+    leftColumn: {
+        flex: 1,
+        maxWidth: '40%',
+        minWidth: 0, // Prevents flex issues
+    },
+    rightColumn: {
+        maxWidth: '48%',
+        flex: 1,
+        minWidth: 0, // Prevents flex issues
     },
     sectionTitle: {
         fontSize: 18,
@@ -91,35 +129,32 @@ const styles = StyleSheet.create({
         marginBottom: 6,
         color: '#333',
     },
+    placeholderIcon: {
+        fontSize: 40,
+        marginBottom: 6,
+    },
+    empty: {
+        fontSize: 16,
+        color: '#888',
+    },
+    placeholderContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 20,
+        padding: 20,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 12,
+        borderStyle: 'dashed',
+        borderWidth: 2,
+        borderColor: '#ddd',
+    },
+
     section: {
         marginBottom: 10,
         paddingLeft: 4,
     },
-    label: {
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#444',
-    },
-    value: {
-        fontWeight: 'normal',
-        color: '#222',
-    },
-    ratesRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 8, // Optional: for spacing between rate boxes (React Native 0.71+)
-    },
-    rateBox: {
-        backgroundColor: '#f0f4f8',
-        borderRadius: 8,
-        padding: 6,
-        marginVertical: 3,
-        marginRight: 8, // Add spacing between boxes for older React Native
-        minWidth: 150,
-    },
     attractionBox: {
-        backgroundColor: '#f9f9f9',
+        backgroundColor: '#fff',
         borderRadius: 8,
         padding: 8,
         marginVertical: 4,
@@ -131,112 +166,6 @@ const styles = StyleSheet.create({
     },
     attractionDetail: {
         fontSize: 13,
-        color: '#444',
-    },
-    closeButton: {
-        width: 50,
-        marginTop: 16,
-        backgroundColor: '#1976d2',
-        paddingVertical: 10,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    placeholderContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 12,
-    },
-    placeholderIcon: {
-        fontSize: 40,
-        marginBottom: 6,
-    },
-    empty: {
-        fontSize: 16,
-        color: '#888',
-    },
-    hotelCard: {
-        width: 700,
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        padding: 14,
-        marginBottom: 12,
-        marginHorizontal: 2,
-        shadowColor: '#1976d2',
-        shadowOpacity: 0.07,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
-    },
-    hotelRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-    },
-    hotelImage: {
-        width: 140,
-        height: 140,
-        borderRadius: 10,
-        marginRight: 14,
-        backgroundColor: '#eee',
-    },
-    hotelImagePlaceholder: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    hotelInfo: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    hotelName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#1976d2',
-    },
-    hotelTypeCity: {
-        fontSize: 13,
-        color: '#666',
-        marginTop: 2,
-        marginBottom: 6,
-    },
-    hotelRatingRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 75,
-    },
-    hotelRating: {
-        fontSize: 14,
-        color: '#333',
-        fontWeight: 'bold',
-        marginRight: 6,
-    },
-    hotelReviews: {
-        fontSize: 13,
-        color: '#888',
-    },
-    hotelRates: {
-        minWidth: 110,
-        marginLeft: 14,
-        alignItems: 'flex-start',
-    },
-    ratesLabel: {
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#444',
-        marginBottom: 4,
-    },
-    rateBoxVertical: {
-        backgroundColor: '#f0f4f8',
-        borderRadius: 8,
-        padding: 6,
-        marginBottom: 6,
-        minWidth: 200,
-    },
-    rateProvider: {
-        fontWeight: 'bold',
-        color: '#1976d2',
-        fontSize: 13,
-    },
-    rateDetail: {
-        fontSize: 12,
         color: '#444',
     },
 });
