@@ -5,8 +5,23 @@ import HotelComponent from '../components/Hotel';
 
 export default function Hotels() {
     const hotels = useSelector((state: RootState) => state.travel.hotels);
-    const pageHeader = hotels.length > 0 ? `Hotels that matched your search in ${hotels[0].city}` : 'No hotels searched';
 
+    // Show placeholder when no hotels are found
+    if (hotels.length === 0) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.emptyStateContainer}>
+                    <Text style={styles.emptyStateIcon}>🏢</Text>
+                    <Text style={styles.emptyStateTitle}>No hotels searched</Text>
+                    <Text style={styles.emptyStateSubtitle}>
+                        Search for hotels from the home screen to see results here
+                    </Text>
+                </View>
+            </View>
+        );
+    }
+
+    const pageHeader = `Hotels that matched your search in ${hotels[0].city}`;
     const leftHotels = hotels.slice(0, 5);
     const rightHotels = hotels.slice(5, 10);
 
@@ -47,5 +62,29 @@ const styles = StyleSheet.create({
     column: {
         flex: 1,
         marginHorizontal: 4,
+    },
+    emptyStateContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyStateIcon: {
+        fontSize: 60,
+        marginBottom: 20,
+        opacity: 0.6,
+    },
+    emptyStateTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#666',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    emptyStateSubtitle: {
+        fontSize: 16,
+        color: '#888',
+        textAlign: 'center',
+        lineHeight: 24,
     },
 });
