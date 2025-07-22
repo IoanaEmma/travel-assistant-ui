@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, Image, Pressable, Modal, ActivityIndicator, Tou
 import { Hotel, Rate } from '../types/travel';
 import { useGetHotelDetailsQuery } from '../features/hotel/hotelApi';
 import HotelDetails from './HotelDetails';
-import { useCreateTripMutation, useGetTripsQuery } from '../features/trip/tripApi';
+import { useCreateTripMutation, useGetTripsQuery, useAddItemToTripMutation } from '../features/trip/tripApi';
 import AddToTripModal from './modals/AddToTripModal';
+import { useCreateHotelMutation } from '../features/hotel/hotelApi';
 
 interface HotelProps {
   hotel: Hotel;
@@ -14,6 +15,8 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [addToTripModalVisible, setAddToTripModalVisible] = useState(false);
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
+  const [createHotel] = useCreateHotelMutation();
+  const [addItemToTrip] = useAddItemToTripMutation();
 
   // Get active trips for dropdown
   const { data: trips = [] } = useGetTripsQuery("1");
@@ -34,8 +37,13 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
     setAddToTripModalVisible(true);
   };
 
-  const handleSelectTrip = (tripId: string) => {
+  const handleSelectTrip = async (tripId: string) => {
     console.log('Adding hotel to trip:', tripId);
+    const currentHotel = await createHotel(hotel).unwrap();
+    if (currentHotel) {
+      console.log('Hotel created:', currentHotel);
+      await addItemToTrip({ tripId, item: { type: 'hotel', itemId: currentHotel.id! } });
+    }
     setAddToTripModalVisible(false);
   };
 
