@@ -7,6 +7,8 @@ interface TripProps {
     onPress?: () => void;
     onComplete?: () => void;
     onCancel?: () => void;
+    onActive?: () => void;
+    onDelete: () => void;
 }
 
 const statusIcon = (status?: string) => {
@@ -20,28 +22,65 @@ const statusIcon = (status?: string) => {
     }
 };
 
-const TripCard: React.FC<TripProps> = ({ trip, onPress, onComplete, onCancel }) => (
+const TripCard: React.FC<TripProps> = ({ trip, onPress, onComplete, onCancel, onActive, onDelete }) => (
     <Pressable onPress={onPress}>
         <View style={styles.card}>
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{trip.name}</Text>
                 <Text style={styles.when}> {trip.when || ' '}</Text>
-                {trip.status === 'active' && (
-                    <View style={styles.buttonRow}>
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.completeButton]}
-                            onPress={onComplete}
-                        >
-                            <Text style={styles.buttonText}>Complete</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.cancelButton]}
-                            onPress={onCancel}
-                        >
-                            <Text style={styles.buttonText}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+                <View style={styles.btnWrapper}>
+                    {trip.status === 'active' && (
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.completeButton]}
+                                onPress={onComplete}
+                            >
+                                <Text style={styles.buttonText}>Complete</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.cancelButton]}
+                                onPress={onCancel}
+                            >
+                                <Text style={styles.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    {trip.status === 'canceled' && (
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.completeButton]}
+                                onPress={onActive}
+                            >
+                                <Text style={styles.buttonText}>Active</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.cancelButton]}
+                                onPress={onComplete}
+                            >
+                                <Text style={styles.buttonText}>Completed</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    {trip.status === 'completed' && (
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.completeButton]}
+                                onPress={onActive}
+                            >
+                                <Text style={styles.buttonText}>Active</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.cancelButton]}
+                                onPress={onCancel}
+                            >
+                                <Text style={styles.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    <TouchableOpacity style={styles.deleteIconButton} onPress={onDelete}>
+                        <Text style={styles.deleteIcon}>🗑</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
             <View style={styles.statusIconContainer}>
                 <Text style={styles.statusIcon}>{statusIcon(trip.status)}</Text>
@@ -51,6 +90,32 @@ const TripCard: React.FC<TripProps> = ({ trip, onPress, onComplete, onCancel }) 
 );
 
 const styles = StyleSheet.create({
+    btnWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 8,
+    },
+    deleteIconButton: {
+        backgroundColor: '#fff', // Blue background
+        borderRadius: 12,
+        width: 28,
+        height: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    deleteIcon: {
+        marginTop: 8,
+        fontSize: 22,
+        color: '#1976d2'
+    },
+    deleteButton: {
+        backgroundColor: '#f44336',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+        flex: 1,
+    },
     card: {
         width: 300,
         minHeight: 100,
@@ -71,7 +136,7 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flex: 1,
-        paddingRight: 8,
+        paddingRight: 0,
     },
     name: {
         marginLeft: 6,

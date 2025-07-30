@@ -4,7 +4,7 @@ import TripCard from '../components/Trip';
 import TripDetailsModal from '../components/modals/TripDetailsModal';
 import CreateTripModal from '../components/modals/CreateTripModal';
 import { Trip, TripDetails } from '../types/travel';
-import { useGetTripsQuery, useLazyGetTripDetailsQuery, useCreateTripMutation, useUpdateTripMutation } from '../features/trip/tripApi';
+import { useGetTripsQuery, useLazyGetTripDetailsQuery, useCreateTripMutation, useUpdateTripMutation, useDeleteTripMutation } from '../features/trip/tripApi';
 import { useRouter } from 'expo-router';
 
 const TABS = ['Active', 'Completed', 'Canceled'] as const;
@@ -18,6 +18,7 @@ export default function Trips() {
 	const [getTripDetails, { data: tripDetails, isLoading: isDetailsLoading }] = useLazyGetTripDetailsQuery();
 	const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
 	const [updateTrip, { isLoading: isUpdating }] = useUpdateTripMutation();
+	const [deleteTrip, { isLoading: isDeleting }] = useDeleteTripMutation();
 	const [selectedTab, setSelectedTab] = useState<TabType>('Active');
 
 	const handleTripPress = async (trip: Trip) => {
@@ -47,9 +48,28 @@ export default function Trips() {
 		await getTripDetails({ userId: "1", tripId: trip.id });
 	}
 
+	const handleTripActive = async (trip: Trip) => {
+		const updatedTrip = { ...trip, status: 'active' };
+		await updateTrip(updatedTrip);
+		await getTripDetails({ userId: "1", tripId: trip.id });
+	};
+
+	const handleTripDelete = async (trip: Trip) => {
+		// Optional: Add confirmation dialog
+		if (confirm(`Are you sure you want to delete "${trip.name}"?`)) {
+			try {
+				await deleteTrip({ tripId: trip.id }).unwrap();
+				// Trip list will automatically refresh due to RTK Query cache invalidation
+			} catch (error) {
+				console.error('Failed to delete trip:', error);
+				// Handle error (show toast, etc.)
+			}
+		}
+	};
+
 	const renderTrip = ({ item }: { item: Trip }) => (
 		<TripCard trip={item} onPress={() => handleTripPress(item)} onComplete={() => handleTripComplete(item)}
-			onCancel={() => handleTripCancel(item)} />
+			onCancel={() => handleTripCancel(item)} onActive={() => handleTripActive(item)} onDelete={() => handleTripDelete(item)} />
 
 	);
 
