@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
-import { View, ScrollView, Text, Image, StyleSheet } from 'react-native';
-import { useLazyGetTripDetailsQuery } from '../features/trip/tripApi';
+import { View, ScrollView, Text, Image, StyleSheet, TextInput } from 'react-native';
+import { useLazyGetTripDetailsQuery, useUpdateTripMutation } from '../features/trip/tripApi';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { getNumberOfDays } from '../utils/helpers';
 import FlightComponent from '../components/Flight';
 import HotelDetails from '../components/HotelDetails';
@@ -10,10 +10,49 @@ import HotelDetails from '../components/HotelDetails';
 export default function TripDetailsScreen() {
     const { id } = useLocalSearchParams();
     const [getTripDetails, { data: tripDetails }] = useLazyGetTripDetailsQuery();
+    const [updateTrip] = useUpdateTripMutation();
+
+    const [editableWhen, setEditableWhen] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
 
     React.useEffect(() => {
         if (id) getTripDetails({ userId: "1", tripId: id as string });
     }, [id]);
+
+    React.useEffect(() => {
+        if (tripDetails?.when) {
+            setEditableWhen(tripDetails.when);
+        }
+    }, [tripDetails?.when]);
+
+    const handleWhenUpdate = async () => {
+        if (editableWhen !== tripDetails?.when && id) {
+            try {
+                await updateTrip({
+                    userId: "1",
+                    id: id as string,
+                    when: editableWhen
+                }).unwrap();
+
+                // Refresh trip details after update
+                getTripDetails({ userId: "1", tripId: id as string });
+                setIsEditing(false);
+            } catch (error) {
+                console.error('Failed to update trip date:', error);
+                // Reset to original value on error
+                setEditableWhen(tripDetails?.when || '');
+                setIsEditing(false);
+            }
+        } else {
+            setIsEditing(false);
+        }
+    };
+
+    const handleKeyPress = (event: any) => {
+        if (event.nativeEvent.key === 'Enter') {
+            handleWhenUpdate();
+        }
+    };
 
     if (!tripDetails) return <Text>Loading...</Text>;
 
@@ -21,8 +60,19 @@ export default function TripDetailsScreen() {
         <View style={styles.container}>
 
             <View style={styles.modalContent}>
-                <Text style={styles.title}>{tripDetails.name  + ' - Trip Details'}</Text>
-
+                <Text style={styles.title}>{tripDetails.name + ' - Trip Details'}</Text>
+                {/* Editable When Field */}
+                <TextInput
+                    style={[styles.whenInput, isEditing && styles.whenInputEditing]}
+                    value={editableWhen}
+                    onChangeText={setEditableWhen}
+                    onFocus={() => setIsEditing(true)}
+                    onBlur={handleWhenUpdate}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter trip date"
+                    multiline={false}
+                    returnKeyType="done"
+                />
                 <View style={styles.columnsContainer}>
                     {/* Left Column - Hotel and Flight */}
                     <View style={styles.leftColumn}>
@@ -168,4 +218,22 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#444',
     },
+    whenInput: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        color: '#5e90c2ff',
+        textAlign: 'left',
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: 'transparent',
+        minWidth: 200,
+    },
+    whenInputEditing: {
+        backgroundColor: '#f0f4f8',
+        borderColor: '#5e90c2ff',
+        borderWidth: 2,
+    }
 });

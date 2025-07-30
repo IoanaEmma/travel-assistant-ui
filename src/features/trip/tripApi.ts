@@ -64,9 +64,17 @@ export const tripApi = createApi({
                 body: item,
             }),
             invalidatesTags: ["Trips"]
+        }),
+        deleteTrip: builder.mutation<void, { tripId: string }>({
+            query: ({ tripId }) => ({
+                url: `/trip/${tripId}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ["Trips"],
         })
     })
 });
+
 
 export const {
     useGetTripsQuery,
@@ -74,5 +82,6 @@ export const {
     useLazyGetTripDetailsQuery, // <-- add this line
     useCreateTripMutation,
     useUpdateTripMutation,
-    useAddItemToTripMutation
+    useAddItemToTripMutation,
+    useDeleteTripMutation
 } = tripApi;
