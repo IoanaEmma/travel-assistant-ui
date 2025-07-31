@@ -53,22 +53,12 @@ const TripCard: React.FC<TripProps> = ({ trip, onPress, onComplete, onCancel, on
                             >
                                 <Text style={styles.buttonText}>Active</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.cancelButton]}
-                                onPress={onComplete}
-                            >
-                                <Text style={styles.buttonText}>Completed</Text>
-                            </TouchableOpacity>
+                            
                         </View>
                     )}
                     {trip.status === 'completed' && (
                         <View style={styles.buttonRow}>
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.completeButton]}
-                                onPress={onActive}
-                            >
-                                <Text style={styles.buttonText}>Active</Text>
-                            </TouchableOpacity>
+                            
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.cancelButton]}
                                 onPress={onCancel}
