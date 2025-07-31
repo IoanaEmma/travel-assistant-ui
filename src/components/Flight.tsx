@@ -9,9 +9,11 @@ import AddToTripModal from './modals/AddToTripModal';
 interface FlightProps {
   flight: Flight;
   readonly?: boolean; // Optional prop to make the component read-only
+  showRemoveButton?: boolean;
+  onRemove?: () => void;
 }
 
-const FlightComponent: React.FC<FlightProps> = ({ flight, readonly }) => {
+const FlightComponent: React.FC<FlightProps> = ({ flight, readonly, showRemoveButton, onRemove }) => {
   const [addToTripModalVisible, setAddToTripModalVisible] = useState(false);
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
   const [createFlight, { isLoading: isCreatingFlight }] = useCreateFlightMutation();
@@ -70,6 +72,15 @@ const FlightComponent: React.FC<FlightProps> = ({ flight, readonly }) => {
   return (
     <>
       <View style={styles.card}>
+         {/* Remove button - positioned absolutely in top-right corner */}
+        {showRemoveButton && onRemove && (
+          <TouchableOpacity 
+            style={styles.removeButton} 
+            onPress={onRemove}
+          >
+            <Text style={styles.removeButtonText}>✕</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.cardHeader}>
           <Text style={styles.price}>Total Price: {flight.totalPrice}</Text>
 
@@ -117,6 +128,25 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     // Elevation for Android
     elevation: 5,
+    position: 'relative',
+  },
+   removeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#ff4444',
+    borderRadius: 12,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    lineHeight: 14,
   },
   cardHeader: {
     flexDirection: 'row',

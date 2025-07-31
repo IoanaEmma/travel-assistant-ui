@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Hotel, Rate } from '../types/travel';
 import { getNumberOfDays } from '../utils/helpers';
 
@@ -7,11 +7,22 @@ interface HotelDetailsProps {
     hotel: Hotel;
     rates: Rate[];
     currency?: string;
+    showRemoveButton?: boolean;
+    onRemove?: () => void;
 }
 
-const HotelDetails: React.FC<HotelDetailsProps> = ({ hotel, rates, currency }) => {
+const HotelDetails: React.FC<HotelDetailsProps> = ({ hotel, rates, currency, showRemoveButton, onRemove }) => {
     return (
         <View style={styles.hotelCard}>
+            {/* Remove button - positioned absolutely in top-right corner */}
+            {showRemoveButton && onRemove && (
+                <TouchableOpacity 
+                    style={styles.removeButton} 
+                    onPress={onRemove}
+                >
+                    <Text style={styles.removeButtonText}>✕</Text>
+                </TouchableOpacity>
+            )}
             <View style={styles.hotelRow}>
                 {/* Hotel Image */}
                 {hotel.image ? (
@@ -71,10 +82,33 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 2 },
         elevation: 2,
+        position: 'relative'
+    },
+    removeButton: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        backgroundColor: '#ff4444',
+        borderRadius: 12,
+        width: 16,
+        height: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1,
+    },
+    removeButtonText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+        lineHeight: 14,
     },
     hotelRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
+        marginTop: 8,
+        marginBottom: 8,
+        marginRight: 8,
+        marginLeft: 8
     },
     hotelImage: {
         width: 140,

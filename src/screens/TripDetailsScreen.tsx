@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
-import { View, ScrollView, Text, Image, StyleSheet, TextInput } from 'react-native';
-import { useLazyGetTripDetailsQuery, useUpdateTripMutation } from '../features/trip/tripApi';
+import { View, ScrollView, Text, Image, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { useLazyGetTripDetailsQuery, useUpdateTripMutation, useRemoveItemFromTripMutation } from '../features/trip/tripApi';
 
 import React, { useState } from 'react';
 import { getNumberOfDays } from '../utils/helpers';
@@ -11,6 +11,7 @@ export default function TripDetailsScreen() {
     const { id } = useLocalSearchParams();
     const [getTripDetails, { data: tripDetails }] = useLazyGetTripDetailsQuery();
     const [updateTrip] = useUpdateTripMutation();
+    const [removeItemFromTrip] = useRemoveItemFromTripMutation();
 
     const [editableWhen, setEditableWhen] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -54,6 +55,34 @@ export default function TripDetailsScreen() {
         }
     };
 
+    const handleFlightRemoved = async () => {
+        if (!tripDetails?.flight) return;
+        try {
+            await removeItemFromTrip({
+                tripId: id as string,
+                item: { type: 'flight', itemId: tripDetails.flight.id! }
+            }).unwrap();
+            getTripDetails({ userId: "1", tripId: id as string });
+        }
+        catch (error) {
+            console.error('Failed to remove flight from trip:', error);
+        }
+    }
+
+    const handleHotelRemoved = async () => {
+        if (!tripDetails?.hotel) return;
+        try {
+            await removeItemFromTrip({
+                tripId: id as string,
+                item: { type: 'hotel', itemId: tripDetails.hotel.id! }
+            }).unwrap();
+            getTripDetails({ userId: "1", tripId: id as string });
+        }
+        catch (error) {
+            console.error('Failed to remove hotel from trip:', error);
+        }
+    }
+
     if (!tripDetails) return <Text>Loading...</Text>;
 
     return (
@@ -77,9 +106,13 @@ export default function TripDetailsScreen() {
                     {/* Left Column - Hotel and Flight */}
                     <View style={styles.leftColumn}>
                         {/* Hotel */}
-                        <Text style={styles.sectionTitle}>Hotel</Text>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Hotel</Text>
+
+                        </View>
                         {tripDetails.hotel ? (
-                            <HotelDetails hotel={tripDetails.hotel} rates={tripDetails.hotel.rates} currency={tripDetails.hotel.rates[0].currency} />
+                            <HotelDetails hotel={tripDetails.hotel} rates={tripDetails.hotel.rates} currency={tripDetails.hotel.rates[0].currency}
+                                showRemoveButton={true} onRemove={handleHotelRemoved} />
                         ) : (
                             <View style={styles.placeholderContainer}>
                                 <Text style={styles.placeholderIcon}>🏢</Text>
@@ -91,7 +124,7 @@ export default function TripDetailsScreen() {
                         <Text style={styles.sectionTitle}>Flight</Text>
                         {tripDetails.flight ? (
                             <View >
-                                <FlightComponent flight={tripDetails.flight} readonly={true} />
+                                <FlightComponent flight={tripDetails.flight} readonly={true} showRemoveButton={true} onRemove={handleFlightRemoved} />
                             </View>
                         ) : (
                             <View style={styles.placeholderContainer}>
@@ -130,6 +163,13 @@ export default function TripDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 6,
+    },
     container: {
         flex: 1,
         backgroundColor: '#f7faff',
