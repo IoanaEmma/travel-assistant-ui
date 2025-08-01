@@ -6,6 +6,7 @@ import { setCurrentHotel, setHotelDetails } from './hotelSlice';
 export const hotelApi = createApi({
     reducerPath: 'hotelApi',
     baseQuery: fetchBaseQuery({ baseUrl: config.API_URL }),
+    tagTypes: ['Hotels', 'Cities'],
     endpoints: (builder) => ({
         getHotelDetails: builder.query<HotelDetails, { key: string; checkInDate: string; checkOutDate: string }>({
             query: ({ key, checkInDate, checkOutDate }) => ({
@@ -34,6 +35,7 @@ export const hotelApi = createApi({
                 method: 'POST',
                 body: newHotel,
             }),
+            invalidatesTags: ["Hotels", "Cities"],
             async onQueryStarted(newHotel, { queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
@@ -45,7 +47,28 @@ export const hotelApi = createApi({
                 }
             }
         }),
-    }),
+        getHotelsByCity: builder.query<Hotel[], string | undefined>({
+            query: (city) => ({
+                url: city ? `/hotel/all?city=${city}` : '/hotel/all',
+                method: 'GET',
+            }),
+            providesTags: ["Hotels"]
+        }),
+        getHotelsCities: builder.query<string[], void>({
+            query: () => ({
+                url: '/hotel/cities',
+                method: 'GET',
+            }),
+            providesTags: ["Cities"],
+        }),
+        deleteHotel: builder.mutation<void, number>({
+            query: (id) => ({
+                url: `/hotel/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ["Hotels", "Cities"]
+        })
+    })
 });
 
-export const { useGetHotelDetailsQuery, useCreateHotelMutation } = hotelApi;
+export const { useGetHotelDetailsQuery, useCreateHotelMutation, useGetHotelsByCityQuery, useLazyGetHotelsByCityQuery, useGetHotelsCitiesQuery } = hotelApi;
