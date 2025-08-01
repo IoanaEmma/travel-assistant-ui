@@ -83,6 +83,21 @@ export default function TripDetailsScreen() {
         }
     }
 
+    const handleAttractionRemoved = async (attractionId: number) => {
+        if (!tripDetails?.attractions) return;
+
+        try {
+            await removeItemFromTrip({
+                tripId: id as string,
+                item: { type: 'attraction', itemId: attractionId }
+            }).unwrap();
+            getTripDetails({ userId: "1", tripId: id as string });
+        }
+        catch (error) {
+            console.error('Failed to remove attraction from trip:', error);
+        }
+    };
+
     if (!tripDetails) return <Text>Loading...</Text>;
 
     return (
@@ -146,6 +161,13 @@ export default function TripDetailsScreen() {
                             ) : (
                                 tripDetails.attractions.map((attr, idx) => (
                                     <View key={idx} style={styles.attractionBox}>
+                                        {/* Remove button for attraction */}
+                                        <TouchableOpacity
+                                            style={styles.attractionRemoveButton}
+                                            onPress={handleAttractionRemoved.bind(null, attr.id!)}
+                                        >
+                                            <Text style={styles.attractionRemoveButtonText}>✕</Text>
+                                        </TouchableOpacity>
                                         <Text style={styles.attractionName}>{attr.name}</Text>
                                         <Text style={styles.attractionDetail}>Address: {attr.address}</Text>
                                         <Text style={styles.attractionDetail}>Website: {attr.website}</Text>
@@ -167,7 +189,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 16,
         marginBottom: 6,
     },
     container: {
@@ -248,6 +269,25 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 8,
         marginVertical: 4,
+        position: 'relative',
+    },
+    attractionRemoveButton: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        backgroundColor: '#7d6a6aff',
+        borderRadius: 10,
+        width: 14,
+        height: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1,
+    },
+    attractionRemoveButtonText: {
+        color: '#fff',
+        fontSize: 8,
+        fontWeight: 'bold',
+        lineHeight: 12,
     },
     attractionName: {
         fontWeight: 'bold',
