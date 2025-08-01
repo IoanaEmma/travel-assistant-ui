@@ -72,6 +72,7 @@ export interface HotelDetails {
 export interface Attraction {
     id?: number;
     name: string;
+    city: string;
     address: string;
     website: string;
     openingHours: string;

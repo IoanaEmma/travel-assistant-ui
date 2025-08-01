@@ -3,10 +3,14 @@ import { Attraction } from '../../types/travel';
 
 interface AttractionState {
     selectedAttraction: Attraction | null;
+    savedAttractions: Attraction[];
+    cities: string[];
 }
 
 const initialState: AttractionState = {
     selectedAttraction: null,
+    savedAttractions: [],
+    cities: [],
 };
 
 const attractionSlice = createSlice({
@@ -15,10 +19,16 @@ const attractionSlice = createSlice({
     reducers: {
         selectAttraction: (state, action: PayloadAction<Attraction>) => {
             state.selectedAttraction = action.payload;
+        },
+        setSavedAttractions: (state, action: PayloadAction<Attraction[]>) => {
+            state.savedAttractions = action.payload;
+        },
+        setAttractionCities: (state, action: PayloadAction<string[]>) => {
+            state.cities = action.payload;
         }
     },
 });
 
-export const { selectAttraction } = attractionSlice.actions;
+export const { selectAttraction, setSavedAttractions, setAttractionCities } = attractionSlice.actions;
 
 export default attractionSlice.reducer;
