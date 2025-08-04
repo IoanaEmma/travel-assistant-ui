@@ -6,13 +6,15 @@ interface TravelUIState {
     foundFlights: Flight[];
     hotels: Hotel[];
     attractions: Attraction[];
+    assistantResponse: string;
 }
 
 const initialState: TravelUIState = {
     tab: "chat",
     foundFlights: [],
     hotels: [],
-    attractions: []
+    attractions: [],
+    assistantResponse: ''
 };
 
 const travelSlice = createSlice({
@@ -30,9 +32,15 @@ const travelSlice = createSlice({
         },
         setTab(state, action: PayloadAction<string>) {
             state.tab = action.payload;
+        },
+        setAssistantResponse(state, action: PayloadAction<string>) {
+            state.assistantResponse = action.payload;
+        },
+        clearAssistantResponse: (state) => {
+            state.assistantResponse = '';
         }
     }
 });
 
-export const { setFlights, setHotels, setTab, setAttractions } = travelSlice.actions;
+export const { setFlights, setHotels, setTab, setAttractions, setAssistantResponse, clearAssistantResponse } = travelSlice.actions;
 export default travelSlice.reducer;

@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { Attraction, Flight, Hotel, TravelApiResponse } from '../../types/travel';
 import config from '../../config';
-import { setFlights, setTab, setHotels, setAttractions } from './travelSlice';
+import { setFlights, setTab, setHotels, setAttractions, setAssistantResponse } from './travelSlice';
 
 export const travelApi = createApi({
     reducerPath: 'travelApi',
@@ -33,7 +33,16 @@ export const travelApi = createApi({
                         const attractions = data.response.attractions as Attraction[];
                         dispatch(setAttractions(attractions));
                     }
-                } catch { }
+
+                    if (typeof data.response === 'string') {
+                        dispatch(setFlights([]));
+                        dispatch(setHotels([]));
+                        dispatch(setAttractions([]));
+                        dispatch(setAssistantResponse(data.response));
+                    }
+                } catch {
+                    dispatch(setAssistantResponse("I'm not really in the mood to talk right now. Let's try again later."));
+                }
             }
         }),
     }),
