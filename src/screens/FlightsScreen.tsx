@@ -121,6 +121,7 @@ export default function Flights() {
               key={flight.id || `flight-${index}`}
               flight={flight}
               readonly={false}
+              isSaved={flight.id ? true : false}
 
             />
           ))}
@@ -131,7 +132,7 @@ export default function Flights() {
               key={flight.id || `flight-${index}`}
               flight={flight}
               readonly={false}
-
+              isSaved={flight.id ? true : false}
             />
           ))}
         </View>

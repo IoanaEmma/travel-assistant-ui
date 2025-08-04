@@ -3,20 +3,22 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Flight } from '../types/travel';
 import { formatDateTime } from '../utils/helpers';
 import { useGetTripsQuery, useCreateTripMutation, useAddItemToTripMutation } from '../features/trip/tripApi';
-import { useCreateFlightMutation } from '../features/flight/flightApi';
+import { useCreateFlightMutation, useDeleteFlightMutation } from '../features/flight/flightApi';
 import AddToTripModal from './modals/AddToTripModal';
 
 interface FlightProps {
   flight: Flight;
-  readonly?: boolean; // Optional prop to make the component read-only
+  readonly?: boolean;
   showRemoveButton?: boolean;
   onRemove?: () => void;
+  isSaved?: boolean; // New prop for saved state
 }
 
-const FlightComponent: React.FC<FlightProps> = ({ flight, readonly, showRemoveButton, onRemove }) => {
+const FlightComponent: React.FC<FlightProps> = ({ flight, readonly, showRemoveButton, onRemove, isSaved }) => {
   const [addToTripModalVisible, setAddToTripModalVisible] = useState(false);
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
   const [createFlight, { isLoading: isCreatingFlight }] = useCreateFlightMutation();
+  const [deleteFlight] = useDeleteFlightMutation();
   const [addItemToTrip] = useAddItemToTripMutation();
 
   // Get active trips for dropdown
@@ -34,13 +36,26 @@ const FlightComponent: React.FC<FlightProps> = ({ flight, readonly, showRemoveBu
       console.log('Flight created:', currentFlight);
       await addItemToTrip({ tripId, item: { type: 'flight', itemId: currentFlight.id! } });
     }
-
     setAddToTripModalVisible(false);
   };
 
   const handleCreateNewTrip = async () => {
     console.log('Creating new trip for flight');
     await createTrip({ userId: "1", name: flight.destination, when: flight.departureFlight.segments[0].departureTime });
+  };
+
+  const handleAddToFavorites = async () => {
+    await createFlight(flight).unwrap();
+  };
+
+  const handleDeleteFlight = async () => {
+    if (confirm(`Are you sure you want to delete this flight to ${flight.destination}?`)) {
+      try {
+        await deleteFlight(flight.id!);
+      } catch (error) {
+        console.error('Failed to delete flight:', error);
+      }
+    }
   };
 
   // Helper to get summary for a flight direction (departure/return)
@@ -72,20 +87,56 @@ const FlightComponent: React.FC<FlightProps> = ({ flight, readonly, showRemoveBu
   return (
     <>
       <View style={styles.card}>
-         {/* Remove button - positioned absolutely in top-right corner */}
-        {showRemoveButton && onRemove && (
-          <TouchableOpacity 
-            style={styles.removeButton} 
-            onPress={onRemove}
-          >
-            <Text style={styles.removeButtonText}>✕</Text>
-          </TouchableOpacity>
-        )}
+        {/* Action buttons - positioned absolutely in top-right corner */}
+        <View style={styles.actionButtonsContainer}>
+          {/* Legacy remove button - for backward compatibility */}
+          {showRemoveButton && onRemove && (
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={onRemove}
+            >
+              <Text style={styles.removeButtonText}>✕</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* New action buttons - only show if not using legacy remove button */}
+          {!readonly && (
+            <>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleAddToTrip}
+              >
+                <Text style={styles.actionButtonText}>➕</Text>
+              </TouchableOpacity>
+
+              {/* Only show heart button if not already saved */}
+              {!isSaved && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={handleAddToFavorites}
+                >
+                  <Text style={styles.actionButtonText}>❤️</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Show delete button if saved */}
+              {isSaved && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={handleDeleteFlight}
+                >
+                  <Text style={[styles.actionButtonText, { color: '#d63b3bff' }]}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
+
         <View style={styles.cardHeader}>
           <Text style={styles.price}>Total Price: {flight.totalPrice}</Text>
 
-          {/* Add to Trip Button - only show if not readonly */}
-          {!readonly && (
+          {/* Add to Trip Button - only show if not readonly and using legacy mode */}
+          {!readonly && showRemoveButton && (
             <TouchableOpacity
               style={styles.addButton}
               onPress={handleAddToTrip}
@@ -121,26 +172,28 @@ const styles = StyleSheet.create({
     padding: 20,
     marginVertical: 12,
     marginHorizontal: 8,
-    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    // Elevation for Android
     elevation: 5,
     position: 'relative',
   },
-   removeButton: {
+  actionButtonsContainer: {
     position: 'absolute',
     top: 8,
     right: 8,
+    flexDirection: 'row',
+    zIndex: 1,
+  },
+  // Legacy remove button styles
+  removeButton: {
     backgroundColor: '#7d6a6aff',
     borderRadius: 12,
     width: 14,
     height: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
   },
   removeButtonText: {
     color: '#fff',
@@ -148,11 +201,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: 14,
   },
+  // New action button styles
+  actionButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 6,
+  },
+  actionButtonText: {
+    fontSize: 18,
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingRight: 80, // Add space for action buttons
   },
   price: {
     fontWeight: 'bold',

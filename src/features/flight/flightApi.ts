@@ -48,4 +48,9 @@ export const flightApi = createApi({
     })
 });
 
-export const { useCreateFlightMutation, useGetFlightCitiesQuery, useGetFlightsByCityQuery } = flightApi;
+export const { 
+    useCreateFlightMutation, 
+    useGetFlightCitiesQuery, 
+    useGetFlightsByCityQuery,
+    useDeleteFlightMutation 
+} = flightApi;
