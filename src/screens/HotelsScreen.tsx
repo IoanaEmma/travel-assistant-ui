@@ -107,6 +107,7 @@ export default function Hotels() {
                         <HotelComponent
                             key={hotel.key || `${hotel.name}-${index}`}
                             hotel={hotel}
+                            isSaved={hotel.id ? true : false}
 
                         />
                     ))}
@@ -116,6 +117,7 @@ export default function Hotels() {
                         <HotelComponent
                             key={hotel.key || `${hotel.name}-${index}`}
                             hotel={hotel}
+                            isSaved={hotel.id ? true : false}
 
                         />
                     ))}

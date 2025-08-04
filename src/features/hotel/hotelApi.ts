@@ -71,4 +71,11 @@ export const hotelApi = createApi({
     })
 });
 
-export const { useGetHotelDetailsQuery, useCreateHotelMutation, useGetHotelsByCityQuery, useLazyGetHotelsByCityQuery, useGetHotelsCitiesQuery } = hotelApi;
+export const {
+    useGetHotelDetailsQuery,
+    useCreateHotelMutation,
+    useGetHotelsByCityQuery,
+    useLazyGetHotelsByCityQuery,
+    useGetHotelsCitiesQuery,
+    useDeleteHotelMutation
+} = hotelApi;

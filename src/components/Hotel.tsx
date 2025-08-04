@@ -5,17 +5,19 @@ import { useGetHotelDetailsQuery } from '../features/hotel/hotelApi';
 import HotelDetails from './HotelDetails';
 import { useCreateTripMutation, useGetTripsQuery, useAddItemToTripMutation } from '../features/trip/tripApi';
 import AddToTripModal from './modals/AddToTripModal';
-import { useCreateHotelMutation } from '../features/hotel/hotelApi';
+import { useCreateHotelMutation, useDeleteHotelMutation } from '../features/hotel/hotelApi';
 
 interface HotelProps {
   hotel: Hotel;
+  isSaved?: boolean;
 }
 
-const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
+const HotelCard: React.FC<HotelProps> = ({ hotel, isSaved }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [addToTripModalVisible, setAddToTripModalVisible] = useState(false);
   const [createTrip, { isLoading: isCreating }] = useCreateTripMutation();
   const [createHotel] = useCreateHotelMutation();
+  const [deleteHotel] = useDeleteHotelMutation();
   const [addItemToTrip] = useAddItemToTripMutation();
 
   // Get active trips for dropdown
@@ -51,10 +53,56 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
     await createTrip({ userId: "1", name: hotel.city, when: hotel.checkInDate + ' to ' + hotel.checkOutDate });
   };
 
+  const handleAddToFavorites = async (e: any) => {
+    e.stopPropagation();
+    await createHotel(hotel).unwrap();
+  };
+
+  const handleDeleteHotel = async (e: any) => {
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to delete "${hotel.name}"?`)) {
+      try {
+        await deleteHotel(hotel.id!);
+      } catch (error) {
+        console.error('Failed to delete hotel:', error);
+      }
+    }
+  };
+
   return (
     <>
       <Pressable onPress={() => setModalVisible(true)}>
         <View style={styles.card}>
+          {/* Action buttons - positioned absolutely in top-right corner */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleAddToTrip}
+            >
+              <Text style={styles.actionButtonText}>➕</Text>
+            </TouchableOpacity>
+
+            {/* Only show heart button if not already saved */}
+            {!isSaved && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleAddToFavorites}
+              >
+                <Text style={styles.actionButtonText}>❤️</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Show delete button if saved */}
+            {isSaved && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleDeleteHotel}
+              >
+                <Text style={[styles.actionButtonText, { color: '#d63b3bff' }]}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <Image
             source={{ uri: hotel.image }}
             style={styles.image}
@@ -66,13 +114,6 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
             <Text style={styles.rating}>Rating: {hotel.rating} ⭐</Text>
             <Text style={styles.price}>Price range: {hotel.price.min} - {hotel.price.max}</Text>
           </View>
-          {/* Add to Trip Button */}
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAddToTrip}
-          >
-            <Text style={styles.addButtonText}>+ Add to Trip</Text>
-          </TouchableOpacity>
         </View>
       </Pressable>
 
@@ -115,7 +156,6 @@ const HotelCard: React.FC<HotelProps> = ({ hotel }) => {
   );
 };
 
-// Remove the modal-related styles from Hotel.tsx styles since they're now in AddToTripModal
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
@@ -130,6 +170,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
+    position: 'relative', // Add for absolute positioning
+  },
+  actionButtonsContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+
+    zIndex: 1,
+  },
+  actionButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 4
+  },
+  actionButtonText: {
+    fontSize: 18,
   },
   image: {
     width: 90,
@@ -141,6 +197,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
     justifyContent: 'center',
+    paddingRight: 80, // Add space for action buttons
   },
   name: {
     fontWeight: 'bold',
@@ -163,18 +220,6 @@ const styles = StyleSheet.create({
     color: '#388e3c',
     fontWeight: 'bold',
     marginTop: 4,
-  },
-  addButton: {
-    backgroundColor: '#1976d2',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginLeft: 16,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
