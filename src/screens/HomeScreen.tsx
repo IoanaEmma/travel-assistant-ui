@@ -38,7 +38,7 @@ export default function Home() {
 			const response = await chatWithAssistant(currentMessage).unwrap();
 			console.log('Assistant response:', response);
 			// Add assistant response to chat if there's a response string
-			if (Object.prototype.hasOwnProperty.call(response, 'response')) {
+			if (typeof response.response === 'string') {
 				console.log('assistantResponse:', response.response);
 				const assistantMsg: ChatMessage = {
 					id: (Date.now() + 1).toString(),
