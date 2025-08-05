@@ -27,9 +27,14 @@ const AttractionCard: React.FC<AttractionProps> = ({ attraction, readonly, isSav
     };
 
     const handleSelectTrip = async (tripId: string) => {
-        const currentAttraction = await createAttraction(attraction).unwrap();
-        if (currentAttraction) {
-            await addItemToTrip({ tripId, item: { type: 'attraction', itemId: currentAttraction.id! } });
+        if (attraction.id) {
+            await addItemToTrip({ tripId, item: { type: 'attraction', itemId: attraction.id } });
+        }
+        else {
+            const currentAttraction = await createAttraction(attraction).unwrap();
+            if (currentAttraction) {
+                await addItemToTrip({ tripId, item: { type: 'attraction', itemId: currentAttraction.id! } });
+            }
         }
         setAddToTripModalVisible(false);
     };
