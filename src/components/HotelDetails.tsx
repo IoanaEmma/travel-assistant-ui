@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Hotel, Rate } from '../types/travel';
-import { getNumberOfDays } from '../utils/helpers';
+import { getNumberOfDays, generateHotelLink } from '../utils/helpers';
 
 interface HotelDetailsProps {
     hotel: Hotel;
@@ -12,12 +12,32 @@ interface HotelDetailsProps {
 }
 
 const HotelDetails: React.FC<HotelDetailsProps> = ({ hotel, rates, currency, showRemoveButton, onRemove }) => {
+
+    const allowedSites = ["Booking.com", "Agoda.com", "Trip.com", "Vio.com"] as const;
+    const handleRatePress = async (rate: Rate) => {
+        // Ensure rate.name is one of the allowed site names
+        const siteName = allowedSites.find(site => site === rate.name) ?? "Booking.com";
+        const hotelLink = generateHotelLink(
+            siteName,
+            hotel.name,
+            hotel.city,
+            hotel.checkInDate,
+            hotel.checkOutDate
+        );
+        // Open the hotel link in the default browser
+        Linking.openURL(hotelLink);
+    }
+
+    const isAllowedSite = (rateName: string) => {
+        return allowedSites.includes(rateName as any);
+    };
+
     return (
         <View style={styles.hotelCard}>
             {/* Remove button - positioned absolutely in top-right corner */}
             {showRemoveButton && onRemove && (
-                <TouchableOpacity 
-                    style={styles.removeButton} 
+                <TouchableOpacity
+                    style={styles.removeButton}
                     onPress={onRemove}
                 >
                     <Text style={styles.removeButtonText}>✕</Text>
@@ -32,7 +52,7 @@ const HotelDetails: React.FC<HotelDetailsProps> = ({ hotel, rates, currency, sho
                         <Text style={{ fontSize: 20, color: '#bbb' }}>🏢</Text>
                     </View>
                 )}
-                
+
 
                 {/* Hotel Info */}
                 <View style={styles.hotelInfo}>
@@ -56,7 +76,17 @@ const HotelDetails: React.FC<HotelDetailsProps> = ({ hotel, rates, currency, sho
                     {rates && rates.length > 0 ? (
                         rates.map((rate, idx) => (
                             <View key={idx} style={styles.rateBoxVertical}>
-                                <Text style={styles.rateProvider}>{rate.name} - {getNumberOfDays(hotel.checkInDate, hotel.checkOutDate) * (rate.ratePerNight)} {rate.currency}</Text>
+                                {isAllowedSite(rate.name) ? (
+                                    <TouchableOpacity onPress={() => handleRatePress(rate)}>
+                                        <Text style={styles.rateProviderLink}>
+                                            {rate.name} - {getNumberOfDays(hotel.checkInDate, hotel.checkOutDate) * (rate.ratePerNight)} {rate.currency}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <Text style={styles.rateProvider}>
+                                        {rate.name} - {getNumberOfDays(hotel.checkInDate, hotel.checkOutDate) * (rate.ratePerNight)} {rate.currency}
+                                    </Text>
+                                )}
                                 <Text style={styles.rateDetail}>Rate/night: {rate.ratePerNight} {currency}</Text>
                             </View>
                         ))
@@ -175,6 +205,12 @@ const styles = StyleSheet.create({
     value: {
         fontWeight: 'normal',
         color: '#222',
+    },
+    rateProviderLink: {
+        fontWeight: 'bold',
+        color: '#1976d2',
+        fontSize: 13,
+        textDecorationLine: 'underline',
     },
 });
 

@@ -18,3 +18,33 @@ export function formatDateTime(date: string) {
         time: timePart
     };
 }
+
+export function generateHotelLink(
+    siteName: "Booking.com" | "Agoda.com" | "Trip.com" | "Vio.com",
+    hotelName: string,
+    city: string,
+    checkin: string,  // format: YYYY-MM-DD
+    checkout: string  // format: YYYY-MM-DD
+): string {
+    const hotelQuery = hotelName.trim().replace(/\s+/g, "+");
+    const cityQuery = city.trim().replace(/\s+/g, "+");
+
+    switch (siteName.toLowerCase()) {
+        case "booking.com":
+            const [ciYear, ciMonth, ciDay] = checkin.split("-");
+            const [coYear, coMonth, coDay] = checkout.split("-");
+            return `https://www.booking.com/searchresults.html?ss=${cityQuery}+${hotelQuery}&checkin_year=${ciYear}&checkin_month=${parseInt(ciMonth)}&checkin_monthday=${parseInt(ciDay)}&checkout_year=${coYear}&checkout_month=${parseInt(coMonth)}&checkout_monthday=${parseInt(coDay)}`;
+
+        case "agoda.com":
+            return `https://www.agoda.com/search?city=${cityQuery}&q=${hotelQuery}&checkIn=${checkin}&checkOut=${checkout}`;
+
+        case "trip.com":
+            return `https://www.trip.com/hotels/list?city=${cityQuery}&keyword=${hotelQuery}&checkin=${checkin}&checkout=${checkout}`;
+
+        case "vio.com":
+            return `https://www.vio.com/search?placeName=${cityQuery}&query=${hotelQuery}&checkIn=${checkin}&checkOut=${checkout}`;
+
+        default:
+            return "Unsupported site name. Use 'Booking.com', 'Agoda.com', 'Trip.com', or 'Vio.com'.";
+    }
+}
