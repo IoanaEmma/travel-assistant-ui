@@ -2,67 +2,99 @@ import { View, Text, StyleSheet, TextInput, ActivityIndicator, ScrollView } from
 import { useSelector } from 'react-redux';
 import { useChatWithAssistantMutation } from '../features/travel/travelApi';
 import { RootState } from "../store";
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 
 interface ChatMessage {
 	id: string;
 	text: string;
 	isUser: boolean;
-	timestamp: Date;
 }
 
 export default function Home() {
 	const [chatWithAssistant, { isLoading }] = useChatWithAssistantMutation();
 	const [userMessage, setUserMessage] = useState('');
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-	const [hasAssistantResponse, setHasAssistantResponse] = useState(false);
 	const router = useRouter();
+	const scrollViewRef = useRef<ScrollView>(null);
+
+	// Get conversation history from Redux store
+	const conversationHistory = useSelector((state: RootState) => state.travel.conversationHistory);
+
+	// Convert conversation history to chat messages format
+	useEffect(() => {
+		if (conversationHistory && conversationHistory.length > 0) {
+			const formattedMessages: ChatMessage[] = conversationHistory.map((entry, index) => {
+				const messages: ChatMessage[] = [];
+
+				// Add user message
+				if (entry.role === 'user') {
+					messages.push({
+						id: `user-${index}`,
+						text: entry.content,
+						isUser: true
+					});
+				}
+
+				// Add assistant response if it exists
+				if (entry.role === 'assistant') {
+					messages.push({
+						id: `assistant-${index}`,
+						text: entry.content,
+						isUser: false
+					});
+				}
+
+				return messages;
+			}).flat();
+
+			setChatMessages(formattedMessages);
+		}
+	}, [conversationHistory]);
+
+	// Auto-scroll to bottom when messages change
+	useEffect(() => {
+		if (chatMessages.length > 0) {
+			setTimeout(() => {
+				scrollViewRef.current?.scrollToEnd({ animated: true });
+			}, 100);
+		}
+	}, [chatMessages]);
+
+	// Check if we have any assistant responses
+	const hasAssistantResponse = chatMessages.some(msg => !msg.isUser);
 
 	const handleChat = async () => {
 		if (!userMessage.trim()) return;
 
 		const userMsg: ChatMessage = {
-			id: Date.now().toString(),
+			id: `user-${Date.now()}`,
 			text: userMessage,
-			isUser: true,
-			timestamp: new Date()
+			isUser: true
 		};
 
-		// Add user message to chat
+		// Add user message to chat immediately
 		setChatMessages(prev => [...prev, userMsg]);
 		const currentMessage = userMessage;
 		setUserMessage(''); // Clear input
 
 		try {
-			const response = await chatWithAssistant(currentMessage).unwrap();
-			console.log('Assistant response:', response);
-			// Add assistant response to chat if there's a response string
-			if (typeof response.response === 'string') {
-				console.log('assistantResponse:', response.response);
-				const assistantMsg: ChatMessage = {
-					id: (Date.now() + 1).toString(),
-					text: response.response,
-					isUser: false,
-					timestamp: new Date()
-				};
-				setChatMessages(prev => [...prev, assistantMsg]);
-			}
-
+			const response = await chatWithAssistant({ currentMessage, conversationHistory }).unwrap();
+			
 			// Navigate to appropriate tab if specified
-			if (response.tab !== 'home') {
+			if (response.tab && response.tab !== 'home') {
+				// Small delay to show the response before navigating
 				router.push(`/${response.tab}`);
 			}
 
 			console.log('Chat messages:', chatMessages);
 		} catch (error) {
+			console.error('Chat error:', error);
 			// Add error message to chat
-			setHasAssistantResponse(true);
 			const errorMsg: ChatMessage = {
-				id: (Date.now() + 1).toString(),
+				id: `error-${Date.now()}`,
 				text: "I'm not really in the mood to talk right now. Let's try again later.",
 				isUser: false,
-				timestamp: new Date()
 			};
 			setChatMessages(prev => [...prev, errorMsg]);
 		}
@@ -92,37 +124,46 @@ export default function Home() {
 						{message.text}
 					</Text>
 				</View>
-				<Text style={styles.timestamp}>
+				{/* <Text style={styles.timestamp}>
 					{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-				</Text>
+				</Text> */}
 			</View>
 		);
 	};
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>Welcome to Smart Travel Assistant</Text>
-			<Text style={styles.subtitle}>Your AI-powered travel companion</Text>
+			{/* Welcome Section - Centered when no chat history */}
+			<View style={[
+				styles.welcomeSection,
+				!hasAssistantResponse && styles.welcomeSectionCentered
+			]}>
+				<Text style={styles.title}>Welcome to Smart Travel Assistant</Text>
+				<Text style={styles.subtitle}>Your AI-powered travel companion</Text>
 
-			<View style={styles.inputContainer}>
-				<TextInput
-					value={userMessage}
-					onChangeText={setUserMessage}
-					onSubmitEditing={handleChat}
-					returnKeyType="send"
-					style={[
-						styles.input,
-						hasAssistantResponse && styles.inputDisabled
-					]}
-					placeholder="Hi there, let me help you plan your next trip..."
-					placeholderTextColor="#888"
-					editable={!isLoading && !hasAssistantResponse}
-				/>
+				<View style={styles.inputContainer}>
+					<TextInput
+						value={userMessage}
+						onChangeText={setUserMessage}
+						onSubmitEditing={handleChat}
+						returnKeyType="send"
+						style={styles.input}
+						placeholder="Hi there, let me help you plan your next trip..."
+						placeholderTextColor="#888"
+						editable={!isLoading}
+					/>
+				</View>
+
+				{/* Loading indicator when no chat history */}
+				{isLoading && chatMessages.length === 0 && (
+					<ActivityIndicator size="large" color="#1976d2" style={{ marginTop: 16 }} />
+				)}
 			</View>
 
-			{/* Chat Messages */}
+			{/* Chat Messages - Show when we have conversation history */}
 			{chatMessages.length > 0 && (
 				<ScrollView
+					ref={scrollViewRef}
 					style={styles.chatContainer}
 					contentContainerStyle={styles.chatContent}
 					showsVerticalScrollIndicator={false}
@@ -132,7 +173,7 @@ export default function Home() {
 					{/* Loading indicator for assistant response */}
 					{isLoading && (
 						<View style={[styles.messageContainer, styles.assistantMessage]}>
-							<View style={[styles.messageBubble, styles.assistantBubble]}>
+							<View style={[styles.messageBubble, styles.assistantBubble, styles.loadingBubble]}>
 								<ActivityIndicator size="small" color="#1976d2" />
 								<Text style={[styles.messageText, styles.assistantText, { marginLeft: 8 }]}>
 									Thinking...
@@ -142,11 +183,6 @@ export default function Home() {
 					)}
 				</ScrollView>
 			)}
-
-			{/* Loading indicator when no chat history */}
-			{isLoading && chatMessages.length === 0 && (
-				<ActivityIndicator size="large" color="#1976d2" style={{ marginTop: 16 }} />
-			)}
 		</View>
 	);
 }
@@ -154,21 +190,30 @@ export default function Home() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		padding: 20,
 		backgroundColor: '#f0f4f8',
 		paddingTop: 60,
+		paddingHorizontal: 20,
+	},
+	welcomeSection: {
+		width: '100%',
+		alignItems: 'center',
+	},
+	welcomeSectionCentered: {
+		flex: 1,
+		justifyContent: 'center',
+		marginTop: -60, // Offset the paddingTop to truly center
 	},
 	title: {
 		fontSize: 24,
 		fontWeight: 'bold',
 		marginBottom: 8,
+		textAlign: 'center',
 	},
 	subtitle: {
 		fontSize: 16,
 		color: '#555',
 		marginBottom: 24,
+		textAlign: 'center',
 	},
 	inputContainer: {
 		width: '100%',
@@ -190,19 +235,14 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.08,
 		shadowRadius: 2,
 	},
-	inputDisabled: {
-		backgroundColor: '#f5f5f5',
-		borderColor: '#ccc',
-		color: '#999',
-		opacity: 0.6,
-	},
 	chatContainer: {
 		flex: 1,
 		width: '100%',
-		maxHeight: 400,
+		marginTop: 20,
 	},
 	chatContent: {
 		paddingHorizontal: 10,
+		paddingBottom: 20,
 	},
 	messageContainer: {
 		marginVertical: 4,
@@ -232,6 +272,10 @@ const styles = StyleSheet.create({
 		borderBottomLeftRadius: 4,
 		borderWidth: 1,
 		borderColor: '#e0e0e0',
+	},
+	loadingBubble: {
+		flexDirection: 'row',
+		alignItems: 'center',
 	},
 	messageText: {
 		fontSize: 16,

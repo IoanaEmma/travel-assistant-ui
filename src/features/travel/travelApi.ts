@@ -1,23 +1,25 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { Attraction, Flight, Hotel, TravelApiResponse } from '../../types/travel';
+import { Attraction, Flight, Hotel, TravelApiResponse, Conversation } from '../../types/travel';
 import config from '../../config';
-import { setFlights, setTab, setHotels, setAttractions, setAssistantResponse } from './travelSlice';
+import { setFlights, setTab, setHotels, setAttractions, setAssistantResponse, setConversation } from './travelSlice';
 
 export const travelApi = createApi({
     reducerPath: 'travelApi',
     baseQuery: fetchBaseQuery({ baseUrl: config.API_URL }),
     endpoints: (builder) => ({
-        chatWithAssistant: builder.mutation<TravelApiResponse, string>({
-            query: (userMessage) => ({
+        chatWithAssistant: builder.mutation<TravelApiResponse, { currentMessage: string; conversationHistory: Conversation[] }>({
+            query: ({ currentMessage, conversationHistory }) => ({
                 url: '/chat',
                 method: 'POST',
-                body: { userMessage },
+                body: { userMessage: currentMessage, conversationHistory }
             }),
-            async onQueryStarted(_userMessage, { dispatch, queryFulfilled }) {
+            async onQueryStarted({ currentMessage, conversationHistory }, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
                     const tab = data.response.tab;
+                    const conversationHistory = data.conversationHistory || [];
                     dispatch(setTab(tab));
+                    dispatch(setConversation(conversationHistory));
 
                     if (Object.prototype.hasOwnProperty.call(data.response, 'flights')) {
                         const flights = data.response.flights as Flight[];
@@ -35,9 +37,7 @@ export const travelApi = createApi({
                     }
 
                     if (typeof data.response === 'string') {
-                        dispatch(setFlights([]));
-                        dispatch(setHotels([]));
-                        dispatch(setAttractions([]));
+                        
                         dispatch(setAssistantResponse(data.response));
                     }
                 } catch {

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Attraction, Flight, Hotel, TravelApiResponse } from '../../types/travel';
+import { Attraction, Conversation, Flight, Hotel, TravelApiResponse } from '../../types/travel';
 
 interface TravelUIState {
     tab: string;
@@ -7,6 +7,7 @@ interface TravelUIState {
     hotels: Hotel[];
     attractions: Attraction[];
     assistantResponse: string;
+    conversationHistory: Conversation[];
 }
 
 const initialState: TravelUIState = {
@@ -14,7 +15,8 @@ const initialState: TravelUIState = {
     foundFlights: [],
     hotels: [],
     attractions: [],
-    assistantResponse: ''
+    assistantResponse: '',
+    conversationHistory: []
 };
 
 const travelSlice = createSlice({
@@ -38,9 +40,12 @@ const travelSlice = createSlice({
         },
         clearAssistantResponse: (state) => {
             state.assistantResponse = '';
-        }
+        },
+        setConversation(state, action: PayloadAction<Conversation[]>) {
+            state.conversationHistory = action.payload;
+        },
     }
 });
 
-export const { setFlights, setHotels, setTab, setAttractions, setAssistantResponse, clearAssistantResponse } = travelSlice.actions;
+export const { setFlights, setHotels, setTab, setAttractions, setAssistantResponse, clearAssistantResponse, setConversation } = travelSlice.actions;
 export default travelSlice.reducer;

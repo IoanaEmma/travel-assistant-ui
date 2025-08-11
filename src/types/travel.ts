@@ -1,8 +1,13 @@
 export interface TravelApiResponse {
     response: FlightsResponse | HotelsResponse | string | any;
     tab: string;
+    conversationHistory: Conversation[];
 }
 
+export interface Conversation {
+    role: string;
+    content: string;
+}
 export interface FlightsResponse {
     flights: Flight[];
 }
