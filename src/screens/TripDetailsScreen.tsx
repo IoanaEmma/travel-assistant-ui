@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { View, ScrollView, Text, Image, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Text, Image, StyleSheet, TextInput, TouchableOpacity, Linking } from 'react-native';
 import { useLazyGetTripDetailsQuery, useUpdateTripMutation, useRemoveItemFromTripMutation } from '../features/trip/tripApi';
 
 import React, { useState } from 'react';
@@ -98,6 +98,42 @@ export default function TripDetailsScreen() {
         }
     };
 
+    const handleWebsitePress = async (website: string) => {
+        try {
+            const supported = await Linking.canOpenURL(website);
+            if (supported) {
+                await Linking.openURL(website);
+            } else {
+                console.log("Don't know how to open URI: " + website);
+            }
+        } catch (error) {
+            console.error('Error opening website:', error);
+        }
+    };
+
+    const isValidWebsite = (website: string) => {
+        return website &&
+            website !== "No website provided" &&
+            (website.startsWith('http://') || website.startsWith('https://') || website.startsWith('www.'));
+    };
+
+    const renderAttractionWebsite = (website: string) => {
+        if (isValidWebsite(website)) {
+            return (
+                <View style={styles.websiteContainer}>
+                    <Text style={styles.attractionDetail}>Website: </Text>
+                    <TouchableOpacity onPress={() => handleWebsitePress(website)}>
+                        <Text style={styles.websiteLink}>{website}</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        } else {
+            return (
+                <Text style={styles.attractionDetail}>Website: {website}</Text>
+            );
+        }
+    };
+
     if (!tripDetails) return <Text>Loading...</Text>;
 
     return (
@@ -170,7 +206,7 @@ export default function TripDetailsScreen() {
                                         </TouchableOpacity>
                                         <Text style={styles.attractionName}>{attr.name}</Text>
                                         <Text style={styles.attractionDetail}>Address: {attr.address}</Text>
-                                        <Text style={styles.attractionDetail}>Website: {attr.website}</Text>
+                                        {renderAttractionWebsite(attr.website)}
                                         <Text style={styles.attractionDetail}>Opening Hours: {attr.openingHours}</Text>
                                     </View>
                                 ))
@@ -315,5 +351,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f4f8',
         borderColor: '#5e90c2ff',
         borderWidth: 2,
-    }
+    },
+    websiteContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
+    websiteLink: {
+        fontSize: 13,
+        color: '#1976d2',
+        textDecorationLine: 'underline',
+    },
 });

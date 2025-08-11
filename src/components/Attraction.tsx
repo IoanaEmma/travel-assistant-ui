@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Attraction } from '../types/travel';
 import { useGetTripsQuery, useCreateTripMutation, useAddItemToTripMutation } from '../features/trip/tripApi';
 import { useCreateAttractionMutation, useDeleteAttractionMutation } from '../features/attractions/attractionApi';
@@ -63,6 +63,42 @@ const AttractionCard: React.FC<AttractionProps> = ({ attraction, readonly, isSav
         }
     }
 
+    const handleWebsitePress = async () => {
+        try {
+            const supported = await Linking.canOpenURL(attraction.website);
+            if (supported) {
+                await Linking.openURL(attraction.website);
+            } else {
+                console.log("Don't know how to open URI: " + attraction.website);
+            }
+        } catch (error) {
+            console.error('Error opening website:', error);
+        }
+    };
+
+    const isValidWebsite = (website: string) => {
+        return website &&
+            website !== "No website provided" &&
+            (website.startsWith('http://') || website.startsWith('https://') || website.startsWith('www.'));
+    };
+
+    const renderWebsite = () => {
+        if (isValidWebsite(attraction.website)) {
+            return (
+                <View style={styles.websiteContainer}>
+                    <Text style={styles.website}>Website: </Text>
+                    <TouchableOpacity onPress={handleWebsitePress}>
+                        <Text style={styles.websiteLink}>{attraction.website}</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        } else {
+            return (
+                <Text style={styles.website}>Website: {attraction.website}</Text>
+            );
+        }
+    };
+
     return (
         <>
             <View style={styles.card}>
@@ -99,7 +135,7 @@ const AttractionCard: React.FC<AttractionProps> = ({ attraction, readonly, isSav
                 <View style={styles.infoContainer}>
                     <Text style={styles.name}>{attraction.name}</Text>
                     <Text style={styles.location}>Address: {attraction.address}</Text>
-                    <Text style={styles.type}>Website: {attraction.website}</Text>
+                    {renderWebsite()}
                     <Text style={styles.rating}>Opening hours: {attraction.openingHours}</Text>
                 </View>
             </View>
@@ -137,7 +173,6 @@ const styles = StyleSheet.create({
         top: 8,
         right: 8,
         flexDirection: 'row',
-
         zIndex: 1,
     },
     actionButton: {
@@ -162,16 +197,27 @@ const styles = StyleSheet.create({
         color: '#555',
         marginBottom: 2,
     },
-    type: {
+    website: {
         fontSize: 14,
         color: '#444',
         marginBottom: 2,
+    },
+    websiteLink: {
+        fontSize: 14,
+        color: '#1976d2',
+        marginBottom: 2,
+        textDecorationLine: 'underline',
     },
     rating: {
         fontSize: 14,
         color: '#444',
         marginBottom: 2,
-    }
+    },
+    websiteContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 2,
+    },
 });
 
 export default AttractionCard;
